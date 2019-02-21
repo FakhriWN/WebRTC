@@ -73,7 +73,7 @@ socket.on('full', function(room) {
 
 /**
  * Ini buat nge get event saat ada orang lain yang join, 
- * Bakal outpul ada yang join di room ..
+ * Bakal output ada yang join di room ..
  * ngubah status channelnya ready
  */
 
@@ -349,5 +349,21 @@ function stop() {
 
 /**
  * PS dari Ridwan : 
- * Ini juga masih nyari mengenai offer dan ICE candidate, mungkin Acong bisa tambahin komen?
+ * Ini juga masih nyari mengenai offer dan ICE candidate, mungkin Fakhri bisa tambahin komen?
+ 
+ * Interactive Connectivity Establishment (ICE) Teknik yang digunakan pada JARINGAN KOMPUTER 
+    untuk mencari cara bagi dua buah komputer untuk saling berbicara langsung(tanpa ada server) sesegera mungkin pada Jaringan P2P
+    Metodologi ICE dapat digunakan untuk menemukan sarana konektivitas yang optimal.
+
+    STUN menyediakan cara untuk melewati NAT. STUN server responds with a success response that contains the IP address and port number of the client
+    Namun, address yang diperoleh STUN mungkin tidak dapat digunakan oleh semua peers, tergantung pada kondisi topologi jaringan dan lokasi client
+
+    TURN untuk melewati Symmetric NAT restriction dengan membuka koneksi ke TURN server dan menerima serta mengirim semua informasi melewati server itu.
+    Cara ini digunakan jika tidak ada cara lain lagi.
+
+    SDP(Session Description Protocol) standar untuk menggambarkan konten multimedia dari koneksi seperti resolusi, format, codec, enkripsi, dll. 
+    Sehingga kedua peers dapat saling memahami satu sama lain begitu data ditransfer. 
+    pada dasarnya adalah metadata yang menggambarkan konten dan bukan konten media itu sendiri.
+
+    yang di offer nya itu SDP
  */
