@@ -8,6 +8,9 @@ var pc;
 var remoteStream;
 var turnReady;
 
+/**
+ * Konfigurasi untuk TURN dan STUN server
+ */
 var pcConfig = {
   'iceServers': [{
     'urls': 'stun:stun.l.google.com:19302'
@@ -33,31 +36,58 @@ var sdpConstraints = {
 
 /////////////////////////////////////////////
 
+/**
+ * Deklarasi nama room
+ */
 var room = 'foo';
 // Could prompt for room name:
 // room = prompt('Enter room name:');
 
+//Membuat koneksi pada socket
 var socket = io.connect();
 
+//Kalau nama roomnya tidak kosong, maka pada socket membuat room (di emit)
 if (room !== '') {
   socket.emit('create or join', room);
   console.log('Attempted to create or  join room', room);
 }
 
+/**
+ * Ini buat nge get event saat room pertama kali dibuat, 
+ * Bakal ngeluarin log kalau room sudah dibuat dan 
+ * yang pertama kali ngakses statusnya bakal jadi initiator
+ */
 socket.on('created', function(room) {
   console.log('Created room ' + room);
   isInitiator = true;
 });
 
+/**
+ * Ini buat nge get event saat room penuh, 
+ * Bakal outpul room penuh di log
+ * 
+ */
 socket.on('full', function(room) {
   console.log('Room ' + room + ' is full');
 });
+
+/**
+ * Ini buat nge get event saat ada orang lain yang join, 
+ * Bakal outpul ada yang join di room ..
+ * ngubah status channelnya ready
+ */
 
 socket.on('join', function (room){
   console.log('Another peer made a request to join room ' + room);
   console.log('This peer is the initiator of room ' + room + '!');
   isChannelReady = true;
 });
+
+/**
+ * Ini buat nge get event saat kita  udah join room, 
+ * Bakal outpul kita join ke room tersebut
+ * ngubah status channelnya ready
+ */
 
 socket.on('joined', function(room) {
   console.log('joined: ' + room);
@@ -70,11 +100,23 @@ socket.on('log', function(array) {
 
 ////////////////////////////////////////////////
 
+/**
+ * Ini fungsi buat ngirim message 
+ */
 function sendMessage(message) {
   console.log('Client sending message: ', message);
   socket.emit('message', message);
 }
 
+/**
+ * Ini fungsi buat ngirim message 
+ */
+
+ /**
+ * Ini fungsi buat ngeget event kalau si socket dapat pesan
+ * 1. Kalau pesannya gotusermedia dia manggil fungsi maybestart()
+ * 2. Else dia ngecek  
+ */
 // This client receives a message
 socket.on('message', function(message) {
   console.log('Client received message:', message);
@@ -104,8 +146,12 @@ socket.on('message', function(message) {
 var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
+/**
+ * Ini buat setting enabled video dan audio
+ * Tadi audionya ternyata false sudah diubah jadi true
+ */
 navigator.mediaDevices.getUserMedia({
-  audio: false,
+  audio: true,
   video: true
 })
 .then(gotStream)
@@ -113,6 +159,11 @@ navigator.mediaDevices.getUserMedia({
   alert('getUserMedia() error: ' + e.name);
 });
 
+
+/**
+ * 
+ * Ngambil akses stream kamera 
+ */
 function gotStream(stream) {
   console.log('Adding local stream.');
   localStream = stream;
@@ -123,7 +174,11 @@ function gotStream(stream) {
   }
 }
 
+/**
+ * Contrains buat setting di laptop sendiri
+ */
 var constraints = {
+  audio:true,
   video: true
 };
 
@@ -133,6 +188,9 @@ if (location.hostname !== 'localhost') {
   requestTurn('https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913');
 }
 
+/**
+ * Ini fungsi buat ngecek apakah si koneksi bisa dilakukan atau tidak
+ */
 function maybeStart() {
   console.log('>>>>>>> maybeStart() ', isStarted, localStream, isChannelReady);
   if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
@@ -147,12 +205,19 @@ function maybeStart() {
   }
 }
 
+
+/**
+ * Ini fungsi buat ngecek kalau ngeclose tab atau putus koneksi 
+ */
 window.onbeforeunload = function() {
   sendMessage('bye');
 };
 
 /////////////////////////////////////////////////////////
 
+/**
+ * Membuat Peer to peer connection dengan mendaftarkan beberapa even handler
+ */
 function createPeerConnection() {
   try {
     pc = new RTCPeerConnection(null);
@@ -167,6 +232,10 @@ function createPeerConnection() {
   }
 }
 
+/**
+ * 
+ * Nangkep ice candidate dari beberapa kemungkinan 
+ */
 function handleIceCandidate(event) {
   console.log('icecandidate event: ', event);
   if (event.candidate) {
@@ -208,6 +277,10 @@ function onCreateSessionDescriptionError(error) {
   trace('Failed to create session description: ' + error.toString());
 }
 
+/**
+ * Akses URL server
+ * @param {*} turnURL 
+ */
 function requestTurn(turnURL) {
   var turnExists = false;
   for (var i in pcConfig.iceServers) {
@@ -247,20 +320,34 @@ function handleRemoteStreamRemoved(event) {
   console.log('Remote stream removed. Event: ', event);
 }
 
+/**
+ * Memutuskan koneksi
+ */
 function hangup() {
   console.log('Hanging up.');
   stop();
   sendMessage('bye');
 }
 
+/**
+ * Memutuskan koneksi
+ */
 function handleRemoteHangup() {
   console.log('Session terminated.');
   stop();
   isInitiator = false;
 }
 
+/**
+ * Menghentikan koneksi
+ */
 function stop() {
   isStarted = false;
   pc.close();
   pc = null;
 }
+
+/**
+ * PS dari Ridwan : 
+ * Ini juga masih nyari mengenai offer dan ICE candidate, mungkin Acong bisa tambahin komen?
+ */
