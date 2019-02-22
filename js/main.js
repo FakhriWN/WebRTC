@@ -51,7 +51,8 @@ var sdpConstraints = {
 };
 
 /////////////////////////////////////////////
-
+//Membuat koneksi pada socket
+var socket = io.connect();
 /**
  * Deklarasi nama room
  */
@@ -59,14 +60,17 @@ var room = 'foo';
 // Could prompt for room name:
 // room = prompt('Enter room name:');
 
-//Membuat koneksi pada socket
-var socket = io.connect();
-
 //Kalau nama roomnya tidak kosong, maka pada socket membuat room (di emit)
 if (room !== '') {
   socket.emit('create or join', room);
   console.log('Attempted to create or  join room', room);
 }
+/****************************************************************************
+* Signaling server
+****************************************************************************/
+
+
+
 
 /**
  * Ini buat nge get event saat room pertama kali dibuat, 
@@ -250,6 +254,15 @@ function createPeerConnection(isInitiator,config) {
       console.log('Creating Data Channel');
       dataChannel = pc.createDataChannel('photos');
       onDataChannelCreated(dataChannel);
+
+      console.log('Creating an offer');
+      pc.createOffer(onLocalSessionCreated,logError);
+    }else{
+      pc.ondatachannel = function(event){
+        console.log('ondatachannel:',event.channel);
+        dataChannel = event.channel;
+        onDataChannelCreated(dataChannel);
+      };
     }
     pc.onaddstream = handleRemoteStreamAdded;
     pc.onremovestream = handleRemoteStreamRemoved;
@@ -260,6 +273,8 @@ function createPeerConnection(isInitiator,config) {
     return;
   }
 }
+
+
 
 /**
  * 
@@ -397,6 +412,85 @@ function stop() {
     yang di offer nya itu SDP
  */
 
+
+function onDataChannelCreated(channel){
+  console.log('onDataChannelCreated:', channel);
+  channel.onopen = function(){
+    console.log('CHANNEL opened!!!');
+    sendBtn.disabled = false;
+    snapAndSendBtn.disabled = false;
+  };
+  
+  channel.onclose = function(){
+    console.log('channel closed.');
+    sendBtn.disabled = true;
+    snapAndSendBtn.disabled = true;
+  }
+  channel.onmessage = (adapter.browserDetails.browser === 'firefox') ?
+  receiveDataFirefoxFactory() : receiveDataChromeFactory();
+}
+
+function receiveDataChromeFactory(){
+    var buf, count;
+
+  return function onmessage(event) {
+    if (typeof event.data === 'string') {
+      buf = window.buf = new Uint8ClampedArray(parseInt(event.data));
+      count = 0;
+      console.log('Expecting a total of ' + buf.byteLength + ' bytes');
+      return;
+    }
+
+    var data = new Uint8ClampedArray(event.data);
+    buf.set(data, count);
+
+    count += data.byteLength;
+    console.log('count: ' + count);
+
+    if (count === buf.byteLength) {
+      // we're done: all data chunks have been received
+      console.log('Done. Rendering photo.');
+      renderPhoto(buf);
+      }
+    };
+}
+
+function receiveDataFirefoxFactory(){
+  var count, total, parts;
+    return function onmessage(event) {
+    if (typeof event.data === 'string') {
+      total = parseInt(event.data);
+      parts = [];
+      count = 0;
+      console.log('Expecting a total of ' + total + ' bytes');
+      return;
+    }
+
+    parts.push(event.data);
+    count += event.data.size;
+    console.log('Got ' + event.data.size + ' byte(s), ' + (total - count) +
+                ' to go.');
+
+    if (count === total) {
+      console.log('Assembling payload');
+      var buf = new Uint8ClampedArray(total);
+      var compose = function(i, pos) {
+        var reader = new FileReader();
+        reader.onload = function() {
+          buf.set(new Uint8ClampedArray(this.result), pos);
+          if (i + 1 === parts.length) {
+            console.log('Done. Rendering photo.');
+            renderPhoto(buf);
+          } else {
+            compose(i + 1, pos + this.result.byteLength);
+          }
+        };
+        reader.readAsArrayBuffer(parts[i]);
+      };
+      compose(0, 0);
+    }
+  };
+}
 /****************************************************************************
 * Aux functions, mostly UI-related
 ****************************************************************************/
@@ -425,12 +519,44 @@ function sendPhoto(){
     return;
   }
   dataChannel.send(len);
+  // split the photo and send in chunks of about 64KB
+  for (var i = 0; i < n; i++) {
+    var start = i * CHUNK_LEN,
+    end = (i + 1) * CHUNK_LEN;
+    console.log(start + ' - ' + (end - 1));
+    dataChannel.send(img.data.subarray(start, end));
+  }
+
+  // send the reminder, if any
+  if (len % CHUNK_LEN) {
+    console.log('last ' + len % CHUNK_LEN + ' byte(s)');
+    dataChannel.send(img.data.subarray(n * CHUNK_LEN));
+  }
+}
+
+function renderPhoto(data) {
+  var canvas = document.createElement('canvas');
+  canvas.width = photoContextW;
+  canvas.height = photoContextH;
+  canvas.classList.add('incomingPhoto');
+  // trail is the element holding the incoming images
+  trail.insertBefore(canvas, trail.firstChild);
+
+  var context = canvas.getContext('2d');
+  var img = context.createImageData(photoContextW, photoContextH);
+  img.data.set(data);
+  context.putImageData(img, 0, 0);
 }
 
 //Fungsi untuk show style. sebanyak parameter yang diberikan
 function show(){
   Array.prototype.forEach.call(arguments,function(elem){
     elem.style.display = null;
+  });
+}
+function hide() {
+  Array.prototype.forEach.call(arguments, function(elem) {
+    elem.style.display = 'none';
   });
 }
 
