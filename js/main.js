@@ -5,8 +5,24 @@ var isInitiator = false;
 var isStarted = false;
 var localStream;
 var pc;
+var dataChannel;
 var remoteStream;
 var turnReady;
+
+var photo = document.getElementById('photo');
+var photoContext = photo.getContext('2d');
+var trail = document.getElementById('trail');
+var snapBtn = document.getElementById('snap');
+var sendBtn = document.getElementById('send');
+var snapAndSendBtn = document.getElementById('snapAndSend');
+
+var photoContextW;
+var photoContextH;
+
+//Memasang Event untuk Tombol
+snapBtn.addEventListener('click',snapPhoto);
+sendBtn.addEventListener('click',sendPhoto);
+//snapAndSendBtn.addEventListener('click',snapAndSend);
 
 /**
  * Konfigurasi untuk TURN dan STUN server
@@ -168,6 +184,12 @@ function gotStream(stream) {
   console.log('Adding local stream.');
   localStream = stream;
   localVideo.srcObject = stream;
+  localVideo.onloadedmetadata = function(){
+    photo.width = photoContextW = localVideo.videoWidth;
+    photo.height = photoContextH = localVideo.videoHeight;
+    console.log('gotStream with width and height:', photoContextW, photoContextH);
+  }
+  show(snapBtn);
   sendMessage('got user media');
   if (isInitiator) {
     maybeStart();
@@ -195,7 +217,7 @@ function maybeStart() {
   console.log('>>>>>>> maybeStart() ', isStarted, localStream, isChannelReady);
   if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
     console.log('>>>>>> creating peer connection');
-    createPeerConnection();
+    createPeerConnection(isInitiator,pcConfig);
     pc.addStream(localStream);
     isStarted = true;
     console.log('isInitiator', isInitiator);
@@ -218,10 +240,17 @@ window.onbeforeunload = function() {
 /**
  * Membuat Peer to peer connection dengan mendaftarkan beberapa even handler
  */
-function createPeerConnection() {
+function createPeerConnection(isInitiator,config) {
   try {
-    pc = new RTCPeerConnection(null);
+    console.log('Creating Peer connection as initiator?', isInitiator, 'config:',
+              config);
+    pc = new RTCPeerConnection(config);
     pc.onicecandidate = handleIceCandidate;
+    if(isInitiator){
+      console.log('Creating Data Channel');
+      dataChannel = pc.createDataChannel('photos');
+      onDataChannelCreated(dataChannel);
+    }
     pc.onaddstream = handleRemoteStreamAdded;
     pc.onremovestream = handleRemoteStreamRemoved;
     console.log('Created RTCPeerConnnection');
@@ -367,3 +396,49 @@ function stop() {
 
     yang di offer nya itu SDP
  */
+
+/****************************************************************************
+* Aux functions, mostly UI-related
+****************************************************************************/
+
+function snapPhoto(){
+  photoContext.drawImage(localVideo, 0, 0, photo.width, photo.height);
+  show(photo, sendBtn);
+}
+
+function sendPhoto(){
+// Split data channel message in chunks of this byte length.
+  var CHUNK_LEN = 64000;
+  console.log('width and height', photoContextW,photoContextH);
+  var img = photoContext.getImageData(0, 0, photoContextW, photoContextH),
+  len = img.data.byteLength,
+  n = len/CHUNK_LEN | 0;
+
+  console.log('Sending a total of'+len+'byte(s)');
+
+  if(!dataChannel){
+   logError('Connection has not been initiated'+
+   'Get two peers in the same room first');
+   return 
+  }else if(dataChannel.readyState === 'closed'){
+    logError('Connection was lost. Peer closed the connection');
+    return;
+  }
+  dataChannel.send(len);
+}
+
+//Fungsi untuk show style. sebanyak parameter yang diberikan
+function show(){
+  Array.prototype.forEach.call(arguments,function(elem){
+    elem.style.display = null;
+  });
+}
+
+function logError(err) {
+  if (!err) return;
+  if (typeof err === 'string') {
+    console.warn(err);
+  } else {
+    console.warn(err.toString(), err);
+  }
+}

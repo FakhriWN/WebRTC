@@ -75,6 +75,10 @@ io.sockets.on('connection', function(socket) {
       });
     }
   });
+  
+  socket.on('disconnect',function(reason){
+    console.log(`Peer or server disconnect. Reason: ${reason}.`);
+  });
 
   socket.on('bye', function(){
     console.log('received bye');
