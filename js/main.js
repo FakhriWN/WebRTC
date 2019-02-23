@@ -60,18 +60,19 @@ var socket = io.connect();
 /**
  * Deklarasi nama room
  */
-var room = window.location.hash.substring(1);
-if (!room) {
-  room = window.location.hash = randomToken();
-}
+
+// var room = window.location.hash.substring(1);
+// if (!room) {
+//   room = window.location.hash = randomToken();
+// }
 // Could prompt for room name:
 // room = prompt('Enter room name:');
-
+var room = 'foo';
 //Kalau nama roomnya tidak kosong, maka pada socket membuat room (di emit)
-// if (room !== '') {
-//   socket.emit('create or join', room);
-//   console.log('Attempted to create or  join room', room);
-// }
+if (room !== '') {
+  socket.emit('create or join', room);
+  console.log('Attempted to create or  join room', room);
+}
 
 /****************************************************************************
 * Signaling server
@@ -131,9 +132,6 @@ socket.on('joined', function(room) {
 socket.on('log', function(array) {
   console.log.apply(console, array);
 });
-
-// Joining a room.
-socket.emit('create or join', room);
 
 window.addEventListener('unload', function() {
   console.log(`Unloading window. Notifying peers in ${room}.`);
