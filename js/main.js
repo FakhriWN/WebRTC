@@ -2,6 +2,7 @@
 
 var isChannelReady = false;
 var isInitiator = false;
+var isDataChannelInitiator;
 var isStarted = false;
 var localStream;
 var pc;
@@ -16,13 +17,16 @@ var snapBtn = document.getElementById('snap');
 var sendBtn = document.getElementById('send');
 var snapAndSendBtn = document.getElementById('snapAndSend');
 
+var localVideo = document.querySelector('#localVideo');
+var remoteVideo = document.querySelector('#remoteVideo');
+
 var photoContextW;
 var photoContextH;
 
 //Memasang Event untuk Tombol
 snapBtn.addEventListener('click',snapPhoto);
 sendBtn.addEventListener('click',sendPhoto);
-//snapAndSendBtn.addEventListener('click',snapAndSend);
+snapAndSendBtn.addEventListener('click',snapAndSend);
 
 /**
  * Konfigurasi untuk TURN dan STUN server
@@ -56,30 +60,33 @@ var socket = io.connect();
 /**
  * Deklarasi nama room
  */
-var room = 'foo';
+var room = window.location.hash.substring(1);
+if (!room) {
+  room = window.location.hash = randomToken();
+}
 // Could prompt for room name:
 // room = prompt('Enter room name:');
 
 //Kalau nama roomnya tidak kosong, maka pada socket membuat room (di emit)
-if (room !== '') {
-  socket.emit('create or join', room);
-  console.log('Attempted to create or  join room', room);
-}
+// if (room !== '') {
+//   socket.emit('create or join', room);
+//   console.log('Attempted to create or  join room', room);
+// }
+
 /****************************************************************************
 * Signaling server
 ****************************************************************************/
-
-
-
 
 /**
  * Ini buat nge get event saat room pertama kali dibuat, 
  * Bakal ngeluarin log kalau room sudah dibuat dan 
  * yang pertama kali ngakses statusnya bakal jadi initiator
  */
-socket.on('created', function(room) {
-  console.log('Created room ' + room);
+socket.on('created', function(room, clientId) {
+  console.log('Created room', room, '- my client ID is', clientId);
   isInitiator = true;
+  isDataChannelInitiator = true;
+  grabWebCamVideo();
 });
 
 /**
@@ -89,6 +96,11 @@ socket.on('created', function(room) {
  */
 socket.on('full', function(room) {
   console.log('Room ' + room + ' is full');
+});
+
+socket.on('ready', function() {
+  console.log('Socket is ready');
+  //createPeerConnection(isInitiator, pcConfig);
 });
 
 /**
@@ -112,11 +124,22 @@ socket.on('join', function (room){
 socket.on('joined', function(room) {
   console.log('joined: ' + room);
   isChannelReady = true;
+  isDataChannelInitiator = false;
+  grabWebCamVideo();
 });
 
 socket.on('log', function(array) {
   console.log.apply(console, array);
 });
+
+// Joining a room.
+socket.emit('create or join', room);
+
+window.addEventListener('unload', function() {
+  console.log(`Unloading window. Notifying peers in ${room}.`);
+  socket.emit('bye', room);
+});
+
 
 ////////////////////////////////////////////////
 
@@ -148,6 +171,7 @@ socket.on('message', function(message) {
     }
     pc.setRemoteDescription(new RTCSessionDescription(message));
     doAnswer();
+    
   } else if (message.type === 'answer' && isStarted) {
     pc.setRemoteDescription(new RTCSessionDescription(message));
   } else if (message.type === 'candidate' && isStarted) {
@@ -161,24 +185,23 @@ socket.on('message', function(message) {
   }
 });
 
-////////////////////////////////////////////////////
-
-var localVideo = document.querySelector('#localVideo');
-var remoteVideo = document.querySelector('#remoteVideo');
-
+/****************************************************************************
+* User media (webcam)
+****************************************************************************/
 /**
  * Ini buat setting enabled video dan audio
  * Tadi audionya ternyata false sudah diubah jadi true
  */
-navigator.mediaDevices.getUserMedia({
-  audio: true,
-  video: true
-})
-.then(gotStream)
-.catch(function(e) {
-  alert('getUserMedia() error: ' + e.name);
-});
-
+function grabWebCamVideo(){
+  navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: true
+  })
+  .then(gotStream)
+  .catch(function(e) {
+    alert('getUserMedia() error: ' + e.name);
+  });
+}
 
 /**
  * 
@@ -186,6 +209,8 @@ navigator.mediaDevices.getUserMedia({
  */
 function gotStream(stream) {
   console.log('Adding local stream.');
+  console.log('getUserMedia video stream URL:', stream);
+  window.stream = stream; // stream available to console
   localStream = stream;
   localVideo.srcObject = stream;
   localVideo.onloadedmetadata = function(){
@@ -227,17 +252,9 @@ function maybeStart() {
     console.log('isInitiator', isInitiator);
     if (isInitiator) {
       doCall();
-    }
+    }   
   }
 }
-
-
-/**
- * Ini fungsi buat ngecek kalau ngeclose tab atau putus koneksi 
- */
-window.onbeforeunload = function() {
-  sendMessage('bye');
-};
 
 /////////////////////////////////////////////////////////
 
@@ -250,22 +267,22 @@ function createPeerConnection(isInitiator,config) {
               config);
     pc = new RTCPeerConnection(config);
     pc.onicecandidate = handleIceCandidate;
-    if(isInitiator){
-      console.log('Creating Data Channel');
-      dataChannel = pc.createDataChannel('photos');
-      onDataChannelCreated(dataChannel);
-
-      console.log('Creating an offer');
-      pc.createOffer(onLocalSessionCreated,logError);
-    }else{
-      pc.ondatachannel = function(event){
-        console.log('ondatachannel:',event.channel);
-        dataChannel = event.channel;
-        onDataChannelCreated(dataChannel);
-      };
-    }
     pc.onaddstream = handleRemoteStreamAdded;
     pc.onremovestream = handleRemoteStreamRemoved;
+    // if(isDataChannelInitiator){
+    //     console.log('Creating Data Channel');
+    //     dataChannel = pc.createDataChannel('photos');
+    //     onDataChannelCreated(dataChannel);
+
+    //     console.log('Creating an offer');
+    //     pc.createOffer(onLocalSessionCreated,logError);
+    //   }else{
+    //     pc.ondatachannel = function(event){
+    //     console.log('ondatachannel:',event.channel);
+    //     dataChannel = event.channel;
+    //     onDataChannelCreated(dataChannel);
+    //   };
+    // }
     console.log('Created RTCPeerConnnection');
   } catch (e) {
     console.log('Failed to create PeerConnection, exception: ' + e.message);
@@ -273,8 +290,6 @@ function createPeerConnection(isInitiator,config) {
     return;
   }
 }
-
-
 
 /**
  * 
@@ -412,7 +427,13 @@ function stop() {
     yang di offer nya itu SDP
  */
 
-
+function onLocalSessionCreated(desc){
+  console.log('local session created:', desc);
+  pc.setLocalDescription(desc,function(){
+    console.log('sending local desc:', pc.localDescription);
+    sendMessage(pc.localDescription);
+  },logError);
+}
 function onDataChannelCreated(channel){
   console.log('onDataChannelCreated:', channel);
   channel.onopen = function(){
@@ -547,6 +568,10 @@ function renderPhoto(data) {
   img.data.set(data);
   context.putImageData(img, 0, 0);
 }
+function snapAndSend() {
+  snapPhoto();
+  sendPhoto();
+}
 
 //Fungsi untuk show style. sebanyak parameter yang diberikan
 function show(){
@@ -567,4 +592,8 @@ function logError(err) {
   } else {
     console.warn(err.toString(), err);
   }
+}
+
+function randomToken() {
+  return Math.floor((1 + Math.random()) * 1e16).toString(16).substring(1);
 }
