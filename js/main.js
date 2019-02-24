@@ -28,6 +28,15 @@ snapBtn.addEventListener('click',snapPhoto);
 sendBtn.addEventListener('click',sendPhoto);
 snapAndSendBtn.addEventListener('click',snapAndSend);
 
+//Variabel untuk RTCDataChannel (Text message)
+var sendButton = document.querySelector('button#sendButton');
+var dataConstraint;
+var sendChannel;
+sendButton.onclick = sendData;
+var dataChannelSend = document.querySelector('textarea#dataChannelSend');
+var dataChannelReceive = document.querySelector('textarea#dataChannelReceive');
+
+
 /**
  * Konfigurasi untuk TURN dan STUN server
  */
@@ -180,7 +189,12 @@ socket.on('message', function(message) {
     pc.addIceCandidate(candidate);
   } else if (message === 'bye' && isStarted) {
     handleRemoteHangup();
+  } 
+  //Nambahin kondisi dimana dia receivenya txtmsg maka text area receive diisi pesan yang diterimanya
+  else if(message.type === 'txtmsg' && isStarted){
+    dataChannelReceive.value = message.content;
   }
+
 });
 
 /****************************************************************************
@@ -267,6 +281,15 @@ function createPeerConnection(isInitiator,config) {
     pc.onicecandidate = handleIceCandidate;
     pc.onaddstream = handleRemoteStreamAdded;
     pc.onremovestream = handleRemoteStreamRemoved;
+
+    //var data text
+    sendChannel = pc.createDataChannel('sendDataChannel');
+    
+    sendChannel.onopen = onSendChannelStateChange;
+    sendChannel.onclose = onSendChannelStateChange;
+
+    pc.ondatchannel = receiveChannelCallback;
+
     // if(isDataChannelInitiator){
     //     console.log('Creating Data Channel');
     //     dataChannel = pc.createDataChannel('photos');
@@ -594,4 +617,57 @@ function logError(err) {
 
 function randomToken() {
   return Math.floor((1 + Math.random()) * 1e16).toString(16).substring(1);
+}
+
+/*
+===========
+  FUNGSI RTCDataChannel
+===========
+*/
+function sendData() {
+  var data = 
+  {
+    'type' : 'txtmsg',
+    'content' : dataChannelSend.value
+  };
+  //Ini bisa pake setLocalAndSendMessage tapi blm dieksplor lebih lanjut
+  sendMessage(data);
+  console.log('Sent Data: ' + data);
+}
+
+function receiveChannelCallback(event) {
+  console.log('Receive Channel Callback');
+  receiveChannel = event.channel;
+  receiveChannel.onmessage = onReceiveMessageCallback;
+  receiveChannel.onopen = onReceiveChannelStateChange;
+  receiveChannel.onclose = onReceiveChannelStateChange;
+}
+
+function onReceiveMessageCallback(event) {
+  console.log('Received Message');
+  dataChannelReceive.value = event.data;
+}
+
+function onReceiveChannelStateChange() {
+  var readyState = receiveChannel.readyState;
+  console.log('Receive channel state is: ' + readyState);
+}
+
+function setLocalAndSendMessage(sessionDescription) {
+  pc.setLocalDescription(sessionDescription);
+  console.log('setLocalAndSendMessage sending message', sessionDescription);
+  sendMessage(sessionDescription);
+}
+
+function onSendChannelStateChange() {
+  var readyState = sendChannel.readyState;
+  console.log('Send channel state is: ' + readyState);
+  if (readyState === 'open') {
+    dataChannelSend.disabled = false;
+    sendButton.disabled = false;
+    dataChannelSend.focus();
+    } else {
+    dataChannelSend.disabled = true;
+    sendButton.disabled = true;
+  }
 }
