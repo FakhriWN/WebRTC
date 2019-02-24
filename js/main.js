@@ -35,8 +35,10 @@ var sendChannel;
 sendButton.onclick = sendData;
 var dataChannelSend = document.querySelector('textarea#dataChannelSend');
 var dataChannelReceive = document.querySelector('textarea#dataChannelReceive');
-
-
+var chatHistory = '';
+sendButton.disabled = true;
+dataChannelSend.disabled = true;
+dataChannelReceive.addEventListener('click',blurReceive);
 /**
  * Konfigurasi untuk TURN dan STUN server
  */
@@ -154,6 +156,13 @@ window.addEventListener('unload', function() {
  * Ini fungsi buat ngirim message 
  */
 function sendMessage(message) {
+  if(message.type === 'txtmsg'){
+    if(chatHistory !== ''){chatHistory+='\n';}  
+    chatHistory = chatHistory + 'You \t: ' + message.content;
+    dataChannelSend.value = '';
+    dataChannelReceive.value = chatHistory;
+  }
+ 
   console.log('Client sending message: ', message);
   socket.emit('message', message);
 }
@@ -192,7 +201,8 @@ socket.on('message', function(message) {
   } 
   //Nambahin kondisi dimana dia receivenya txtmsg maka text area receive diisi pesan yang diterimanya
   else if(message.type === 'txtmsg' && isStarted){
-    dataChannelReceive.value = message.content;
+    chatHistory = chatHistory + '\nPartner : ' + message.content;
+    dataChannelReceive.value = chatHistory;
   }
 
 });
@@ -347,11 +357,11 @@ function doAnswer() {
   );
 }
 
-function setLocalAndSendMessage(sessionDescription) {
-  pc.setLocalDescription(sessionDescription);
-  console.log('setLocalAndSendMessage sending message', sessionDescription);
-  sendMessage(sessionDescription);
-}
+// function setLocalAndSendMessage(sessionDescription) {
+//   pc.setLocalDescription(sessionDescription);
+//   console.log('setLocalAndSendMessage sending message', sessionDescription);
+//   sendMessage(sessionDescription);
+// }
 
 function onCreateSessionDescriptionError(error) {
   trace('Failed to create session description: ' + error.toString());
@@ -654,7 +664,7 @@ function onReceiveChannelStateChange() {
 }
 
 function setLocalAndSendMessage(sessionDescription) {
-  pc.setLocalDescription(sessionDescription);
+  pc.setLocalDescription(sessionDescription);  
   console.log('setLocalAndSendMessage sending message', sessionDescription);
   sendMessage(sessionDescription);
 }
@@ -670,4 +680,8 @@ function onSendChannelStateChange() {
     dataChannelSend.disabled = true;
     sendButton.disabled = true;
   }
+}
+
+function blurReceive(){
+  dataChannelReceive.blur();
 }

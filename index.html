@@ -10,34 +10,39 @@
 </head>
 
 <body>
-
-  <h1>Realtime communication with WebRTC</h1>
-
-  <div id="videoCanvas">
-    <video id="localVideo" autoplay muted playsinline></video>
-    <video id="remoteVideo" autoplay playsinline></video>
-    <canvas id="photo"></canvas>
+  <div class="header">
+    <h1>Realtime communication with WebRTC</h1>
   </div>
-  <div>
-    <textarea id="dataChannelSend"></textarea>
-  <textarea id="dataChannelReceive"></textarea>
   
-  <div id="buttons">
-      <button id="sendButton">Send Message</button>
+  <div id="bodyLayout">
+    <div id="videoCanvas">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <video id="remoteVideo" autoplay playsinline></video>
+      
     </div>
-</div>
 
-  <div id="buttons">
-    <button id="snap">Snap</button><span> then </span><button id="send">Send</button>
-    <span> or </span>
-    <button id="snapAndSend">Snap &amp; Send</button>
+    <div id="textChannel">
+      <textarea id="dataChannelReceive" rows="20"></textarea>
+      <textarea id="dataChannelSend"></textarea>
+        <button id="sendButton">Send Message</button>
+      
+    </div>
   </div>
 
-  <div id="incoming">
-    <h2>Incoming photos</h2>
-    <div id="trail"></div>
-  </div>
+  
+  <div id="snapping">
+    <canvas id="photo"></canvas>
+    <div id="buttons">
+      <button id="snap">Snap</button><span> then </span><button id="send">Send</button>
+      <span> or </span>
+      <button id="snapAndSend">Snap &amp; Send</button>
+    </div>
 
+    <div id="incoming">
+      <h2>Incoming photos</h2>
+      <div id="trail"></div>
+    </div>
+  </div>
   <!-- This file is automatically added/served when running "node index.js". -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
