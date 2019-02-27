@@ -97,7 +97,6 @@ if (room !== '') {
 socket.on('created', function(room, clientId) {
   console.log('Created room', room, '- my client ID is', clientId);
   isInitiator = true;
-  isDataChannelInitiator = true;
   grabWebCamVideo();
 });
 
@@ -162,7 +161,6 @@ function sendMessage(message) {
     dataChannelSend.value = '';
     dataChannelReceive.value = chatHistory;
   }
- 
   console.log('Client sending message: ', message);
   socket.emit('message', message);
 }
@@ -187,7 +185,6 @@ socket.on('message', function(message) {
     }
     pc.setRemoteDescription(new RTCSessionDescription(message));
     doAnswer();
-    
   } else if (message.type === 'answer' && isStarted) {
     pc.setRemoteDescription(new RTCSessionDescription(message));
   } else if (message.type === 'candidate' && isStarted) {
@@ -204,7 +201,6 @@ socket.on('message', function(message) {
     chatHistory = chatHistory + '\nPartner : ' + message.content;
     dataChannelReceive.value = chatHistory;
   }
-
 });
 
 /****************************************************************************
@@ -294,26 +290,20 @@ function createPeerConnection(isInitiator,config) {
 
     //var data text
     sendChannel = pc.createDataChannel('sendDataChannel');
-    
     sendChannel.onopen = onSendChannelStateChange;
     sendChannel.onclose = onSendChannelStateChange;
 
-    pc.ondatchannel = receiveChannelCallback;
-
-    // if(isDataChannelInitiator){
-    //     console.log('Creating Data Channel');
-    //     dataChannel = pc.createDataChannel('photos');
-    //     onDataChannelCreated(dataChannel);
-
-    //     console.log('Creating an offer');
-    //     pc.createOffer(onLocalSessionCreated,logError);
-    //   }else{
-    //     pc.ondatachannel = function(event){
-    //     console.log('ondatachannel:',event.channel);
-    //     dataChannel = event.channel;
-    //     onDataChannelCreated(dataChannel);
-    //   };
-    // }
+    if(!isInitiator){
+      pc.ondatachannel = function(event) {
+        console.log('ondatachannel:', event.channel);
+        dataChannel = event.channel;
+        onDataChannelCreated(dataChannel);
+      };
+    }else{
+      console.log('Creating Data Channel');
+      dataChannel = pc.createDataChannel('photos');
+      onDataChannelCreated(dataChannel);
+    }
     console.log('Created RTCPeerConnnection');
   } catch (e) {
     console.log('Failed to create PeerConnection, exception: ' + e.message);
@@ -646,7 +636,7 @@ function sendData() {
 }
 
 function receiveChannelCallback(event) {
-  console.log('Receive Channel Callback');
+  console.log('ondatachannel:', event.channel);
   receiveChannel = event.channel;
   receiveChannel.onmessage = onReceiveMessageCallback;
   receiveChannel.onopen = onReceiveChannelStateChange;
