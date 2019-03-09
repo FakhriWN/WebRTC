@@ -2,7 +2,6 @@
 
 var isChannelReady = false;
 var isInitiator = false;
-var isDataChannelInitiator;
 var isStarted = false;
 var localStream;
 var pc;
@@ -16,6 +15,8 @@ var trail = document.getElementById('trail');
 var snapBtn = document.getElementById('snap');
 var sendBtn = document.getElementById('send');
 var snapAndSendBtn = document.getElementById('snapAndSend');
+var conn = document.getElementById('conn');
+var connectBtn = document.getElementById('Connect');
 
 var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
@@ -27,6 +28,7 @@ var photoContextH;
 snapBtn.addEventListener('click',snapPhoto);
 sendBtn.addEventListener('click',sendPhoto);
 snapAndSendBtn.addEventListener('click',snapAndSend);
+connectBtn.addEventListener('click',onConnectExtension);
 
 //Variabel untuk RTCDataChannel (Text message)
 var sendButton = document.querySelector('button#sendButton');
@@ -80,10 +82,13 @@ var socket = io.connect();
 // room = prompt('Enter room name:');
 var room = 'foo';
 //Kalau nama roomnya tidak kosong, maka pada socket membuat room (di emit)
-if (room !== '') {
-  socket.emit('create or join', room);
-  console.log('Attempted to create or  join room', room);
+function onConnectExtension(){
+      if (room !== '') {
+      socket.emit('create or join', room);
+      console.log('Attempted to create or  join room', room);
+    }
 }
+
 
 /****************************************************************************
 * Signaling server
@@ -135,7 +140,6 @@ socket.on('join', function (room){
 socket.on('joined', function(room) {
   console.log('joined: ' + room);
   isChannelReady = true;
-  isDataChannelInitiator = false;
   grabWebCamVideo();
 });
 
@@ -219,6 +223,7 @@ function grabWebCamVideo(){
   .catch(function(e) {
     alert('getUserMedia() error: ' + e.name);
   });
+  
 }
 
 /**
@@ -399,7 +404,6 @@ function handleRemoteStreamAdded(event) {
 function handleRemoteStreamRemoved(event) {
   console.log('Remote stream removed. Event: ', event);
 }
-
 /**
  * Memutuskan koneksi
  */
@@ -671,7 +675,6 @@ function onSendChannelStateChange() {
     sendButton.disabled = true;
   }
 }
-
 function blurReceive(){
   dataChannelReceive.blur();
 }
