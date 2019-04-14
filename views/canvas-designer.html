@@ -12,7 +12,10 @@
   <link rel="stylesheet" type="text/css" href="/public/css/emojionearea.min.css">
   <link href="/public/css/bootstrap.min.css" rel="stylesheet">
   <link href="/public/css/style.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/public/icons/flaticon.css"/>
+  <link rel="stylesheet" href="/public/css/getMediaElement-v1.2.css" />
 
+  <script src="/public/js/getMediaElement-v1.2.js"></script>
   <script src="/public/js/jquery.min.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="/public/js/RTCMultiConnection.js"></script>
@@ -44,7 +47,7 @@ input[disabled], button[disabled] {
 }
 </style>
 </head>
-<body>
+<body onload="virtualClassroom()">
 <style>
 .extra-controls {
     position: absolute;
@@ -58,11 +61,12 @@ input[disabled], button[disabled] {
 }
 #other-videos {
     margin-top: 5px;
+    font-size: 50%;
 }
-#other-videos video {
-    width: 45%;
-    margin: 5px;
-    border: 1px solid black;
+#other-videos .video-player{
+    display: inline-block;
+    width: 50%;
+    margin-top: 5px;
     padding: 1px;
     border-radius: 3px;
 }
@@ -141,7 +145,7 @@ hr {
         <div class="col-3">
             <video id="screen-viewer" controls playsinline autoplay></video>
             <div style="width: 100%;margin-top:5%">
-                <div id="main-video"></div>
+                <div id="main-video" style="width: 100%;"></div>
                 <div id="other-videos"></div>
                 <hr>
                 <div style="padding: 5px 10px;">
@@ -179,6 +183,7 @@ hr {
         params[d(match[1])] = d(match[2]);
     window.params = params;
 })();
+function virtualClassroom(){
 var connection = new RTCMultiConnection();
 connection.socketURL = '/';
 // connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
@@ -304,54 +309,126 @@ connection.onmessage = function(event) {
         designer.sync();
         return;
     }
+    if(event.data.muteid === connection.userid){
+        var streamByUserId = connection.streamEvents.selectFirst({ userid: event.data.muteid }).stream;
+        streamByUserId.mute(event.data.type);
+        return;
+    }
+    if(event.data.unmuteid === connection.userid){
+        var streamByUserId = connection.streamEvents.selectFirst({ userid: event.data.unmuteid }).stream;
+        streamByUserId.unmute(event.data.type);
+    }
     designer.syncData(event.data);
 };
 // extra code
 connection.onstream = function(event) {
-    var h2 = document.createElement('h2');
+    console.log('onstream');
+    console.log(event.userid);
     var div = document.createElement('div');
-    var isInitiator = connection.isInitiator;
-    console.log(isInitiator);
-    
+    div.id = event.streamid;div.className = 'video-player';
+    var button = [];
+
     if (event.stream.isScreen && !event.stream.canvasStream) {
         $('#screen-viewer').get(0).srcObject = event.stream;
         $('#screen-viewer').hide();
     }
     else if (event.extra.roomOwner === true) {
+        console.log('Owner');
         var video = document.getElementById('main-video');
-        div.id = event.streamid;
-        console.log(connection.extra.streamid);
+        var medWidth = $( '#main-video' ).width()-20;
+        var medHeight = 250;
+        if(connection.isInitiator){
+            button = ['mute-audio', 'mute-video', 'volume-slider'];
+        }
+        var mediaElement = getMediaElement(event.mediaElement, {
+            width: medWidth, //Pixel
+            height: medHeight,
+            buttons: button,
+            toggle: event.type == 'local' ? ['mute-audio'] : [],
+            onMuted: function(type) {
+                console.log(type);
+                connection.streamEvents[event.streamid].stream.mute(type);
+                // connection.streamEvents[event.streamid].stream.mute({
+                //     audio: type == 'audio',
+                //     video: type == 'video'
+                // });
+            },
+            onUnMuted: function(type) {
+                // www.RTCMultiConnection.org/docs/unmute/
+                connection.streamEvents[event.streamid].stream.unmute(type);
+                // connection.streams[event.streamid].unmute({
+                //     audio: type == 'audio',
+                //     video: type == 'video'
+                // });
+            }
+        });
+        div.appendChild(mediaElement);
+        console.log($( '#main-video' ).width());
+        console.log($( '#main-video' ).height());
         if(typeof connection.extra.streamid == 'undefined'){
             connection.extra.streamid = event.streamid;
         }
-        div.className = 'video-div'
-        // video.style.display = 'none';
-        // if(event.type === 'local') {
-        //     video.muted = true;
-        //     video.volume = 0;
-        // }
-        //video.srcObject = event.stream;
-        h2.innerHTML = event.extra.userFullName;
-        div.appendChild(event.mediaElement);
-        div.appendChild(h2);
+
+        //div.appendChild(control);
+        //event.mediaElement.controls = true;
         video.appendChild(div);
         $('#main-video').show();
     } else {
-        console.log(isInitiator);
+        console.log('Not Owner');
+        var otherVideos = document.querySelector('#other-videos');
+        
+        console.log($( '#other-videos' ).width());
+        console.log($( '#other-videos' ).height());
+        var medWidth = ($( '#other-videos' ).width()*(50/100));
+        var medHeight = 120;
+
         if(typeof connection.extra.streamid == 'undefined'){
             connection.extra.streamid = event.streamid;
         }
-        if(isInitiator){
-            event.mediaElement.controls = true;    
+        if(connection.isInitiator){
+            button = ['mute-audio', 'mute-video', 'volume-slider'];
         }else{
-            event.mediaElement.controls = false;
+           button = ['volume-slider'];
         }
-        var otherVideos = document.querySelector('#other-videos');
-        otherVideos.appendChild(event.mediaElement);
+        var mediaElement = getMediaElement(event.mediaElement, {
+            width: medWidth, //Pixel
+            height: medHeight,
+            buttons: button,
+            toggle: event.type == 'local' ? ['mute-audio'] : [],
+            onMuted: function(type) {
+                // www.RTCMultiConnection.org/docs/mute/
+                //connection.streamEvents[event.streamid].stream.mute(type);
+                if(event.type == 'remote'){
+                    var streamByUserId = connection.streamEvents.selectFirst({ userid: event.userid }).stream;
+                    streamByUserId.mute(type);
+                    connection.send({
+                        muteid: event.userid,
+                        type: type
+                    });
+                }
+            },
+            onUnMuted: function(type) {
+                // www.RTCMultiConnection.org/docs/unmute/
+                //connection.streamEvents[event.streamid].stream.unmute(type);
+                if(event.type == 'remote'){
+                    var streamByUserId = connection.streamEvents.selectFirst({ userid: event.userid }).stream;
+                    streamByUserId.unmute(type);
+                    connection.send({
+                        unmuteid: event.userid,
+                        type: type
+                    });
+                }
+                
+            }
+        });
+        div.appendChild(mediaElement);
+        otherVideos.appendChild(div);
+        
     }
     connection.onUserStatusChanged(event);  
 };
 connection.onstreamended = function(event) {
+    console.log('onstreamend');
     var video = document.querySelector('video[data-streamid="' + event.streamid + '"]');
     if (!video) {
         video = document.getElementById(event.streamid);
@@ -365,6 +442,25 @@ connection.onstreamended = function(event) {
         video.style.display = 'none';
     }
 };
+// connection.onmute = function(event) {
+//     if (event.session.video) {
+//         console.log('masuk');
+//         event.mediaElement.src2 = event.mediaElement.src;
+//         event.mediaElement.src = '';
+//         event.mediaElement.style.background = 'transparent url(https://cdn.webrtc-experiment.com/images/muted.png) no-repeat center center';
+//         event.mediaElement.media.play()
+//         return;
+//     }
+// };
+// connection.onunmute = function(event) {
+//     if (event.session.video) {
+//         event.mediaElement.src = event.mediaElement.src2;
+//         event.mediaElement.play();
+//         event.mediaElement.style.background = '';
+//         return;
+//     }
+// };
+connection.extra.cameraStatus = true;
 var cameraStatus = true; //ON
 var btnTurn = document.getElementById('btn-camera');
 btnTurn.addEventListener('click',function(){
@@ -379,8 +475,8 @@ btnTurn.addEventListener('click',function(){
         cameraStatus = true; //ON
     }
         console.log(connection.extra);
-        
     });
+
 var conversationPanel = document.getElementById('conversation-panel');
 function appendChatMessage(event, checkmark_id) {
     var div = document.createElement('div');
@@ -722,6 +818,7 @@ $('#btn-share-screen').click(function() {
         });
     });
 });
+}
 </script>
 </body>
 </html>
