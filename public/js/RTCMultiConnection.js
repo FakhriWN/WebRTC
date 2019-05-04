@@ -394,7 +394,7 @@ var RTCMultiConnection = function(roomid, forceOptions) {
                 status: 'offline',
                 extra: connection.peers[remoteUserId] ? connection.peers[remoteUserId].extra || {} : {}
             });
-
+            console.log('diskonek');
             connection.deletePeer(remoteUserId);
         });
 
@@ -4287,7 +4287,7 @@ var RTCMultiConnection = function(roomid, forceOptions) {
                     //
                 }
 
-                callback();
+                callback();//ConnectSocket(f())
             }, connection);
         };
 
@@ -4389,7 +4389,7 @@ var RTCMultiConnection = function(roomid, forceOptions) {
 
             if (connection.socket) { // todo: check here readySate/etc. to make sure socket is still opened
                 if (connectCallback) {
-                    connectCallback(connection.socket);
+                    connectCallback(connection.socket); //Join
                 }
                 return;
             }
@@ -4406,7 +4406,7 @@ var RTCMultiConnection = function(roomid, forceOptions) {
 
             new SocketConnection(connection, function(s) {
                 if (connectCallback) {
-                    connectCallback(connection.socket);
+                    connectCallback(connection.socket); // OpenRoom
                 }
             });
         }
@@ -5314,6 +5314,7 @@ var RTCMultiConnection = function(roomid, forceOptions) {
         };
 
         connection.invokeGetUserMedia = function(localMediaConstraints, callback, session) {
+            console.log(callback);
             if (!session) {
                 session = connection.session;
             }
@@ -5663,6 +5664,7 @@ var RTCMultiConnection = function(roomid, forceOptions) {
         };
 
         connection.onExtraDataUpdated = function(event) {
+
             event.status = 'online';
             connection.onUserStatusChanged(event, true);
         };
@@ -5843,6 +5845,7 @@ var RTCMultiConnection = function(roomid, forceOptions) {
         };
 
         connection.onUserStatusChanged = function(event, dontWriteLogs) {
+            
             if (!!connection.enableLogs && !dontWriteLogs) {
                 console.info(event.userid, event.status);
             }

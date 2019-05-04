@@ -323,7 +323,7 @@ connection.onmessage = function(event) {
 // extra code
 connection.onstream = function(event) {
     console.log('onstream');
-    console.log(event.userid);
+    console.log(event);
     var div = document.createElement('div');
     div.id = event.streamid;div.className = 'video-player';
     var button = [];
@@ -567,7 +567,7 @@ document.getElementById('btn-attach-file').onclick = function() {
         recentFile = file;
         if(connection.getAllParticipants().length >= 1) {
             recentFile.userIndex = 0;
-            connection.send(file, connection.getAllParticipants()[recentFile.userIndex]);
+            connection.send(file, connection.getAllParticipants()[recentFile.userIndex]);//shareFile
         }
     });
 };
