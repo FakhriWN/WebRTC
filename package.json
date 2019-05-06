@@ -50,6 +50,8 @@
   "dependencies": {
     "canvas-designer": "latest",
     "detectrtc": "latest",
+    "ejs": "latest",
+    "express": "^4.16.4",
     "fbr": "latest",
     "getstats": "latest",
     "multistreamsmixer": "latest",
@@ -57,8 +59,7 @@
     "rtcmulticonnection-server": "latest",
     "socket.io": "latest",
     "webrtc-adapter": "latest",
-    "webrtc-screen-capturing": "latest",
-    "ejs": "latest"
+    "webrtc-screen-capturing": "latest"
   },
   "analyze": false,
   "license": "MIT",
