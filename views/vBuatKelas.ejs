@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Dashboard + Video Conferencing + Chat + File Sharing | RTCMultiConnection</title>
+  <meta name="description" content="WebRTC Dashboard including support for canvas drawing, canvas data syncing, video conferencing, screen sharing and video conferencing. Including chat and file sharing.">
+
+  <link rel="shortcut icon" href="/demos/logo.png">
+
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+  <script src="/js/jquery-3.3.1.slim.min.js"></script>
+  <script src="/js/popper.min.js"></script>
+  <script src="/js/bootstrap.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/RTCMultiConnection.js"></script>
+
+<style type="text/css">
+</style>
+<body>
+    <form action="/kelas" method="post">
+    <input type="text" class="form-control" name="open" value="true" hidden>
+    <!--<input type="text" class="form-control" name="sessionid" id='sessionid'>-->
+    <input type="text" class="form-control" name="PRI" id='PRI' hidden>
+        <div class="form-group">
+            <label>ID Ruangan</label>
+            <input type="text" class="form-control"  placeholder="Nama Ruangan" name="sessionid" id="session-id" readonly>
+            <small id="emailHelp" class="form-text text-muted">Setelah diisi akan mengecek ID ruangan</small>
+        </div>
+        <div class="form-group">
+            <label>Nama Ruangan</label>
+            <input type="text" class="form-control" placeholder="..." name="namaRuangan" required>
+        </div>
+        <div class="form-group">
+            <label>Nama Fasilitator</label>
+            <input type="text" class="form-control" placeholder="..." name="nama" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-submit" >Buat</button>
+    </form>
+
+    <script src="/js/hBuatMasukKelas.js"></script>
+</body>
+</head>

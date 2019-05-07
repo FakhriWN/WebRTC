@@ -92,9 +92,9 @@ if (isUseHTTPs) {
     httpApp = httpServer.createServer(app);
 }
 
-//RTCMultiConnectionServer.beforeHttpListen(httpApp, config);
+RTCMultiConnectionServer.beforeHttpListen(httpApp, config);
 httpApp = httpApp.listen(process.env.PORT || PORT, process.env.IP || "0.0.0.0", function() {
-    //RTCMultiConnectionServer.afterHttpListen(httpApp, config);
+    RTCMultiConnectionServer.afterHttpListen(httpApp, config);
 });
 
 // --------------------------
@@ -102,7 +102,6 @@ httpApp = httpApp.listen(process.env.PORT || PORT, process.env.IP || "0.0.0.0", 
 
 ioServer(httpApp).on('connection', function(socket) {
     RTCMultiConnectionServer.addSocket(socket, config);
-
     // ----------------------
     // below code is optional
 

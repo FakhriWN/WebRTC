@@ -176,6 +176,14 @@ header div .top-span, header div button {
   padding: 2px 8px;
   font-size: 14px;
 }
+#widget-container {
+  width: 100%;
+  height: 680px;
+  border: 1px solid black; 
+  border-top:0; 
+  border-bottom: 0;
+  overflow:hidden;
+}
 #logs-viewer {
   height: 400px;
   overflow: auto;
