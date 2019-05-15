@@ -12,6 +12,9 @@
     console.log(params);
     window.params = params;
 })();
+function notifikasi(){
+    console.log('notifikasi');
+}
 function kelasVirtual(){
     var link = document.getElementById("generate-link")
     link.href = location.origin +'/kelas/bergabung?sessionid='+kelas.sessionid;
@@ -225,9 +228,12 @@ connection.onmessage = function(event) {
 var isdeklarasi = false;
 // extra code
 connection.onstream = function(event) {
-    console.log('onstream');
-    console.log(event);
+    // console.log('onstream');
+    // console.log(event);
     var div = document.createElement('div');
+    var otherVideos = document.querySelector('#other-videos');
+    var mainVideo = document.getElementById('main-video');
+
     div.id = event.streamid;div.className = 'video-player';
     var button = [];
 
@@ -236,8 +242,9 @@ connection.onstream = function(event) {
         $('#screen-viewer').hide();
     }
     else if (event.extra.roomOwner === true) {
-        console.log('Owner');
-        var video = document.getElementById('main-video');
+        //console.log('Owner');
+        var recordObject = connection.streamEvents[event.streamid].stream;
+        
         var medWidth = $( '#main-video' ).width()-20;
         var medHeight = 250;
         if(connection.isInitiator){
@@ -251,7 +258,7 @@ connection.onstream = function(event) {
             buttons: button,
             toggle: event.type == 'local' ? ['mute-audio'] : [],
             onMuted: function(type) {
-                console.log(type);
+                //console.log(type);
                 connection.streamEvents[event.streamid].stream.mute(type);
             },
             onUnMuted: function(type) {
@@ -260,7 +267,7 @@ connection.onstream = function(event) {
             },
             onRecordingStarted: function(type) {
                 // www.RTCMultiConnection.org/docs/startRecording/
-                recorder.addStream(connection.streamEvents[event.streamid].stream);
+                recorder.addStream(recordObject);
                 recorder.mediaType = {
                     audio: true, // or StereoAudioRecorder or MediaStreamRecorder
                     video: true, // or WhammyRecorder or MediaStreamRecorder or WebAssemblyRecorder
@@ -279,15 +286,15 @@ connection.onstream = function(event) {
             },
         });
         div.appendChild(mediaElement);
-        console.log($( '#main-video' ).width());
-        console.log($( '#main-video' ).height());
+        // console.log($( '#main-video' ).width());
+        // console.log($( '#main-video' ).height());
         if(typeof connection.extra.streamid == 'undefined'){
             connection.extra.streamid = event.streamid;
         }
 
         //div.appendChild(control);
         //event.mediaElement.controls = true;
-        video.appendChild(div);
+        mainVideo.appendChild(div);
         $('#main-video').show();
     } else {
         if(!isdeklarasi){
@@ -300,7 +307,7 @@ connection.onstream = function(event) {
         }
         
         console.log('Not Owner');
-        var otherVideos = document.querySelector('#other-videos');
+        
         
         console.log($( '#other-videos' ).width());
         console.log($( '#other-videos' ).height());
@@ -367,24 +374,6 @@ connection.onstreamended = function(event) {
         video.style.display = 'none';
     }
 };
-// connection.onmute = function(event) {
-//     if (event.session.video) {
-//         console.log('masuk');
-//         event.mediaElement.src2 = event.mediaElement.src;
-//         event.mediaElement.src = '';
-//         event.mediaElement.style.background = 'transparent url(https://cdn.webrtc-experiment.com/images/muted.png) no-repeat center center';
-//         event.mediaElement.media.play()
-//         return;
-//     }
-// };
-// connection.onunmute = function(event) {
-//     if (event.session.video) {
-//         event.mediaElement.src = event.mediaElement.src2;
-//         event.mediaElement.play();
-//         event.mediaElement.style.background = '';
-//         return;
-//     }
-// };
 var conversationPanel = document.getElementById('conversation-panel');
 function appendChatMessage(event, checkmark_id) {
     var div = document.createElement('div');
@@ -456,10 +445,11 @@ window.onkeyup = function(e) {
         $('#btn-chat-message').click();
     }
 };
-document.getElementById('btn-chat-message').onclick = function() {
+document.getElementById('btn-chat-message').onclick = kirimPesan
+function kirimPesan(){
     var chatMessage = $('.emojionearea-editor').html();
     $('.emojionearea-editor').html('');
-    console.log(chatMessage);
+    //console.log(chatMessage);
     if (!chatMessage || !chatMessage.replace(/ /g, '').length) return;
     var checkmark_id = connection.userid + connection.token();
     appendChatMessage(chatMessage, checkmark_id);
@@ -470,10 +460,11 @@ document.getElementById('btn-chat-message').onclick = function() {
     connection.send({
         typing: false
     });
-};
+}
 
 var recentFile;
-document.getElementById('btn-attach-file').onclick = function() {
+document.getElementById('btn-attach-file').onclick = kirimFile;
+function kirimFile(){
     var file = new FileSelector();
     file.selectSingleFile(function(file) {
         recentFile = file;
@@ -482,7 +473,7 @@ document.getElementById('btn-attach-file').onclick = function() {
             connection.send(file, connection.getAllParticipants()[recentFile.userIndex]);//shareFile
         }
     });
-};
+}
 function getFileHTML(file) {
     var url = file.url || URL.createObjectURL(file);
     var attachment = '<a href="' + url + '" target="_blank" download="' + file.name + '">Download: <b>' + file.name + '</b></a>';
@@ -738,5 +729,5 @@ $('#btn-share-screen').click(function() {
         });
     });
 });
-
+run_clock('clockdiv',deadline);
 }

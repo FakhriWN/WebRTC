@@ -9,7 +9,7 @@
   <meta name="description" content="WebRTC Dashboard including support for canvas drawing, canvas data syncing, video conferencing, screen sharing and video conferencing. Including chat and file sharing.">
 
   <!--<link rel="shortcut icon" href="/demos/logo.png">-->
-  <link rel="stylesheet" type="text/css" href="/css/emojionearea.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/emojionearea-3.4.1.css">
   <link href="/css/bootstrap.min.css" rel="stylesheet">
   <link href="/css/style.css" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="/icons/flaticon.css"/>
@@ -25,7 +25,7 @@
 
   <script src="/canvas-designer/dev/webrtc-handler.js"></script>
   <script src="/canvas-designer/canvas-designer-widget.js"></script>
-  <script src="/js/emojionearea.min.js"></script>
+  <script src="/js/emojionearea-3.4.1.js"></script>
   <script src="/webrtc-screen-capturing/getScreenId.js"></script>
   <!-- <script src="/node_modules/multistreamsmixer/MultiStreamsMixer.js"></script> -->
 
@@ -136,6 +136,12 @@ hr {
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <a class="navbar-brand" href="#">Navbar</a>
+  <div id="clockdiv">
+		<div><span class="hari"></span><div class="smalltext">Hari</div></div>
+		<div><span class="jam"></span><div class="smalltext">Jam</div></div>
+		<div><span class="menit"></span><div class="smalltext">Menit</div></div>
+		<div><span class="detik"></span><div class="smalltext">Detik</div></div>
+</div>
   <div class="collapse navbar-collapse" id="navbarNav">
   </div>
   <div class="navbar-form navbar-left">
@@ -178,6 +184,7 @@ hr {
         </div>
     </div>
 </div>
+<script src="/js/hTimer.js"></script>
 <script src="/js/hKelasVirtual.js"></script>
 </body>
 </html>
