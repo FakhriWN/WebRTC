@@ -14,24 +14,38 @@
   <script src="/js/RTCMultiConnection.js"></script>
 
 <style type="text/css">
+body {
+  background-image: url("/img/bg-4.jpg");
+}
 </style>
 <body>
-    <form action="/kelas" method="post">
-    <input type="text" class="form-control" name="open" value="false" >
-    <!--<input type="text" class="form-control" name="sessionid" id='sessionid'>-->
-    <input type="text" class="form-control" name="PRI" id='PRI' >
-        <div class="form-group">
-            <label>ID Ruangan</label>
-            <input type="text" class="form-control"  placeholder="Nama Ruangan" name="sessionid" id="session-id" readonly>
-            <small id="emailHelp" class="form-text text-muted">Setelah diisi akan mengecek ID ruangan</small>
+<header>
+        
+</header>
+<div class="container-fluid">
+    <div class="col-lg-12" style="padding: 20px 10px;">
+        <h1 class="text-center">Virtual Classroom</h1>
+    </div>
+    <div class="col-md-12">
+        <div style="width:70%;" class="mx-auto">
+        <div class="card bg-light mb-3">
+            <h5 class="card-header">Gabung Kelas</h5>
+            <div class="card-body">
+                <form action="/kelas" method="post">
+                <input type="text" class="form-control" name="open" value="false" hidden>
+                <input type="text" class="form-control" name="PRI" id='PRI' hidden>
+                <input type="text" class="form-control"  placeholder="Nama Ruangan" name="sessionid" id="session-id" hidden>
+                    <div class="form-group">
+                        <label>Nama</label>
+                        <input type="text" class="form-control" placeholder="..." name="nama" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btn-submit" >Gabung</button>
+                </form>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Nama Partisipan</label>
-            <input type="text" class="form-control" placeholder="..." name="nama" required>
         </div>
-        <button type="submit" class="btn btn-primary" id="btn-submit" >Bergabung</button>
-    </form>
-
+    </div>
+</div>
     <script src="/js/hBuatMasukKelas.js"></script>
 </body>
 </head>

@@ -3,9 +3,18 @@ body {
     font-size: 17px;
     line-height: 1.5em;
 }
-header {
-  border-bottom: 1px solid #95d4e7;
+header, footer{
+  background-color: #f1f1f1;
   height: 70px;
+  padding: 20px 10px;
+  font-size: 35px;
+}
+footer{
+  margin-top: 5px;
+  bottom: 0;
+}
+header{
+  margin-bottom: 5px;
 }
 .logo {
     float: left;

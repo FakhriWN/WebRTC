@@ -23,7 +23,6 @@ connection.socketMessageEvent = 'dashboard';
 // keep room opened even if owner leaves
 connection.autoCloseEntireSession = true;
 connection.connectSocket(function(socket) {
-    looper();
     socket.on('disconnect', function() {
         location.reload();
     });
@@ -51,6 +50,9 @@ function getDataForm(){
         sessionId.value = params.sessionid;
     }else{
         sessionId.value = connection.token();
+        document.getElementById('cek').addEventListener('click',function(){
+            alert('good');
+        });
     }
     PRI.value = connection.publicRoomIdentifier;
 }
