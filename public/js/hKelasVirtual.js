@@ -170,6 +170,7 @@ connection.onopen = function(event) {
 };
 connection.onclose = connection.onerror = connection.onleave = function(event) {
     connection.onUserStatusChanged(event);
+    setReceiverSelected(event);
 };
 connection.onmessage = function(event) {
     //console.log(event);
@@ -198,7 +199,9 @@ connection.onmessage = function(event) {
         return;
     }
     if (event.data.chatMessage) {
-        appendChatMessage(event);
+        if(event.data.receiver_id == 'All'|| event.data.receiver_id == connection.userid){ //cek penerima pesan diedit
+            appendChatMessage(event);
+        }        
         return;
     }
     if (event.data.checkmark === 'received') {
@@ -225,6 +228,38 @@ connection.onmessage = function(event) {
     papanTulisIn.syncData(event.data);
     tempDataCanvasRemote.push(event.data);
 };
+
+// Created by Fadhil Shofian
+function setReceiverSelected(event){
+    console.log('Masuk Selected');
+    var setReceiver = document.getElementById('set-receiver');
+    // setReceiver.removeChild(setReceiver);
+    setReceiver.innerHTML = '';
+    console.log('Masuk Selected2');
+    var option = document.createElement('option');
+    var names = [];
+    connection.getAllParticipants().forEach(function(pid) {
+    console.log('Masuk Selected3');
+        names.push(pid);
+    });
+    console.log(names);
+    // if (!names.length) {
+        option.value = 'All';
+        option.innerHTML = 'All';
+        console.log(option.value);
+        setReceiver.add(option);
+    // } else {
+        console.log(names.length);
+        for(var i=0; i < names.length; i++){
+            var option2 = document.createElement('option');
+            option2.value = names[i];
+            option2.innerHTML = getFullName(names[i]);
+            console.log(option2.value);
+            setReceiver.add(option2);
+        }
+    // }
+}
+
 var isdeklarasi = false;
 // extra code
 connection.onstream = function(event) {
@@ -357,7 +392,8 @@ connection.onstream = function(event) {
         otherVideos.appendChild(div);
         
     }
-    connection.onUserStatusChanged(event);  
+    connection.onUserStatusChanged(event); 
+    setReceiverSelected(event); 
 };
 connection.onstreamended = function(event) {
     console.log('onstreamend');
@@ -374,21 +410,36 @@ connection.onstreamended = function(event) {
         video.style.display = 'none';
     }
 };
+
 var conversationPanel = document.getElementById('conversation-panel');
-function appendChatMessage(event, checkmark_id) {
+function appendChatMessage(event, checkmark_id, receiver_id) {
+    console.log("Masuk appendChatMessage");
     var div = document.createElement('div');
     div.className = 'message';
     if (event.data) {
-        div.innerHTML = '<b>' + (event.extra.userFullName || event.userid) + ':</b><br>' + event.data.chatMessage;
+        if(event.data.receiver_id == connection.userid){
+            div.innerHTML = '<b> from ' + (event.extra.userFullName || event.userid) + ':</b><br>' + event.data.chatMessage;
+            div.style.background = '#f73838';
+        }
+        else{
+            div.innerHTML = '<b>' + (event.extra.userFullName || event.userid) + ':</b><br>' + event.data.chatMessage;
+        }
         if (event.data.checkmark_id) {
             connection.send({
                 checkmark: 'received',
                 checkmark_id: event.data.checkmark_id
             });
         }
+        
     } else {
-        div.innerHTML = '<b>You:</b> <img class="checkmark" id="' + checkmark_id + '" title="Received" src="https://webrtcweb.com/checkmark.png"><br>' + event;
-        div.style.background = '#cbffcb';
+        if(receiver_id != 'All'){
+            div.innerHTML = '<b> to ' + getFullName(receiver_id) + ':</b><br>' + event;
+            div.style.background = '#f73838';
+        }
+        else{
+            div.innerHTML = '<b>You:</b>' + event;
+            div.style.background = '#cbffcb';
+        }
     }
     conversationPanel.appendChild(div);
     conversationPanel.scrollTop = conversationPanel.clientHeight;
@@ -446,16 +497,19 @@ window.onkeyup = function(e) {
     }
 };
 document.getElementById('btn-chat-message').onclick = kirimPesan
-function kirimPesan(){
+function kirimPesan(){ //diedit
     var chatMessage = $('.emojionearea-editor').html();
     $('.emojionearea-editor').html('');
     //console.log(chatMessage);
     if (!chatMessage || !chatMessage.replace(/ /g, '').length) return;
     var checkmark_id = connection.userid + connection.token();
-    appendChatMessage(chatMessage, checkmark_id);
+    console.log(document.getElementById('set-receiver').value);
+    var receiver_id = document.getElementById('set-receiver').value;
+    appendChatMessage(chatMessage, checkmark_id, receiver_id);
     connection.send({
         chatMessage: chatMessage,
-        checkmark_id: checkmark_id
+        checkmark_id: checkmark_id,
+        receiver_id: receiver_id
     });
     connection.send({
         typing: false
@@ -526,7 +580,7 @@ connection.onFileProgress = function(chunk, uuid) {
     updateLabel(helper.progress, helper.label);
 };
 connection.onFileStart = function(file) {
-    if(OneDiv){
+    // if(OneDiv){
         OneDiv = false;
         var div = document.createElement('div');
         div.className = 'message';
@@ -550,7 +604,7 @@ connection.onFileStart = function(file) {
         progressHelper[file.uuid].progress.max = file.maxChunks;
         conversationPanel.scrollTop = conversationPanel.clientHeight;
         conversationPanel.scrollTop = conversationPanel.scrollHeight - conversationPanel.scrollTop;
-    }
+    // }
 };
 function updateLabel(progress, label) {
     if (progress.position == -1) return;

@@ -87,10 +87,10 @@ input[disabled], button[disabled] {
 #conversation-panel {
     margin-bottom: 20px;
     text-align: left;
-    max-height: 200px;
+    height: 540px;
     overflow: scroll;
     border-top: 1px solid #E5E5E5;
-    width: 106%;
+    /*width: 106%;*/
 }
 #conversation-panel .message {
     border-bottom: 1px solid #E5E5E5;
@@ -166,21 +166,24 @@ hr {
                 <div style="padding: 5px 10px;">
                     <div id="onUserStatusChanged"></div>
                 </div>
-                <div style="margin-top: 20px;bottom: 0;background: white; padding-bottom: 20px; width: 100%">
-                    <div id="conversation-panel"></div>
-                    <div id="key-press" style="text-align: right; display: none; font-size: 11px;">
-                        <span style="vertical-align: middle;"></span>
-                    </div>
-                    <textarea id="txt-chat-message"></textarea>
-                    <button class="btn btn-primary" id="btn-chat-message" disabled>Send</button>
-                    <img id="btn-attach-file" src="" title="Attach a File">
-                    <img id="btn-share-screen" src="" alt title="Share Your Screen">
-                </div>
                 <canvas id="temp-stream-canvas" style="display: none;"></canvas>
             </div>            
         </div>
-        <div class="col-9">
+        <div class="col-6">
             <div id="widget-container" ></div>
+        </div>
+        <div class="col-3">
+            <div style="margin-top: 20px;bottom: 0;background: white; padding-bottom: 20px; width: 100%;">
+                <div id="conversation-panel"></div>
+                <div id="key-press" style="text-align: right; font-size: 11px;">
+                    <span style="vertical-align: middle;"></span>
+                </div>
+                <textarea id="txt-chat-message"></textarea>
+                <label for="receiver"> Send to: </label>
+                <select id="set-receiver" class="form-control" style="width:50%"></select>
+                <img id="btn-attach-file" src="https://www.iconbunny.com/icons/media/catalog/product/9/6/969.9-attachment-icon-iconbunny.jpg" title="Attach a File">
+                <button class="btn btn-primary" id="btn-chat-message" disabled>Send</button>
+            </div>
         </div>
     </div>
 </div>
