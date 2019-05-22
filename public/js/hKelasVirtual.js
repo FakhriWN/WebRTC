@@ -1,4 +1,4 @@
-
+var globalVar = {};
 (function() {
     var params = {},
         r = /([^&=]+)=?([^&]*)/g;
@@ -144,6 +144,17 @@ connection.sdpConstraints.mandatory = {
 connection.onUserStatusChanged = function(event) {
     var infoBar = document.getElementById('onUserStatusChanged');
     var names = [];
+
+    //M.Ridwan H D P - Fungsi popup
+    $(function () { $('[data-toggle="popover"]').popover({
+        html : true,
+        placement: 'top',
+        trigger: 'focus',
+        content: '<button>Berikan Izin</button><br><button onclick=kickParticipant('+JSON.stringify(event.userid)+')>Keluarkan</button>'
+    })
+    });
+
+    infoBar.innerHTML = '';
     connection.getAllParticipants().forEach(function(pid) {
         names.push(getFullName(pid));
     });
@@ -152,7 +163,19 @@ connection.onUserStatusChanged = function(event) {
     } else {
         names = [connection.extra.userFullName || 'You'].concat(names);
     }
-    infoBar.innerHTML = '<b>Active users:</b> ' + names.join(', ');
+   
+    names.forEach(function(item){       
+        var btn = document.createElement('button');
+        btn.setAttribute('type','button');
+        btn.setAttribute('class','btn btn-secondary btn-partcipant');
+        btn.setAttribute('data-container','body');
+        btn.setAttribute('data-toggle','popover');
+        // btn.setAttribute('onClick','kickParticipant('+JSON.stringify(event.userid)+')');
+
+        btn.innerHTML = item;
+        infoBar.appendChild(btn);
+    })
+
 };
 connection.onopen = function(event) {
     console.log('OnOpen');
@@ -785,3 +808,7 @@ $('#btn-share-screen').click(function() {
 });
 run_clock('clockdiv',deadline);
 }
+
+function kickParticipant(id){    
+    globalVar.connection.disconnectWith(id);    
+ }

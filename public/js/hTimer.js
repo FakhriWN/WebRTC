@@ -29,7 +29,12 @@ function run_clock(id,_waktuBerakhir){
 		menit_span.innerHTML = ('0' + t.menit).slice(-2);
 		detik_span.innerHTML = ('0' + t.detik).slice(-2);
 		
-		if(t.total<=0){ clearInterval(timeinterval); }
+		if(t.total<=0){ 
+			clearInterval(timeinterval);
+			$.notify({
+				// options
+				message: 'Waktu sudah habis' 
+			}); 
 		}
 	update_clock();
 	var timeinterval = setInterval(update_clock,1000);
