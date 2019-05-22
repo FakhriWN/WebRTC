@@ -2,194 +2,225 @@
 
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Dashboard + Video Conferencing + Chat + File Sharing | RTCMultiConnection</title>
-  <meta name="description" content="WebRTC Dashboard including support for canvas drawing, canvas data syncing, video conferencing, screen sharing and video conferencing. Including chat and file sharing.">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Dashboard + Video Conferencing + Chat + File Sharing | RTCMultiConnection</title>
+    <meta name="description" content="WebRTC Dashboard including support for canvas drawing, canvas data syncing, video conferencing, screen sharing and video conferencing. Including chat and file sharing.">
 
-  <!--<link rel="shortcut icon" href="/demos/logo.png">-->
-  <link rel="stylesheet" type="text/css" href="/css/emojionearea-3.4.1.css">
-  
-  <link href="/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/css/style.css" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="/icons/flaticon.css"/>
-  <link rel="stylesheet" href="/css/getMediaElement-v1.2.css" />
-  <script src="/js/jquery-3.4.0.min.js"></script>
-  <script src="/js/popper.min.js"></script>
-  <script src="/js/bootstrap.min.js"></script>
-  <script src="/js/bootstrap-notify.min.js"></script>
+    <!--<link rel="shortcut icon" href="/demos/logo.png">-->
+    <link rel="stylesheet" type="text/css" href="/css/emojionearea-3.4.1.css">
 
-  <script src="/js/getMediaElement-v1.2.js"></script>
-  
-  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-  <script src="/js/RTCMultiConnection.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/fbr/FileBufferReader.js"></script>
-  <script src="/recordrtc/RecordRTC.js"></script>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/icons/flaticon.css" />
+    <link rel="stylesheet" href="/css/getMediaElement-v1.2.css" />
+    <script src="/js/jquery-3.4.0.min.js"></script>
+    <script src="/js/popper.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/bootstrap-notify.min.js"></script>
 
-  <script src="/canvas-designer/dev/webrtc-handler.js"></script>
-  <script src="/canvas-designer/canvas-designer-widget.js"></script>
-  <script src="/js/emojionearea-3.4.1.js"></script>
-  <script src="/webrtc-screen-capturing/getScreenId.js"></script>
-  <!-- <script src="/node_modules/multistreamsmixer/MultiStreamsMixer.js"></script> -->
+    <script src="/js/getMediaElement-v1.2.js"></script>
 
-<style type="text/css">
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    font-size: 17px;
-    line-height: 1.5em;
-}
-input[disabled], button[disabled] {
-  background: transparent!important;
-  color: #dcd7d7!important;
-  border: 1px solid #dcd7d7!important;
-  cursor: not-allowed!important;
-  text-shadow: none!important;
-  box-shadow: none!important;
-  text-decoration: none!important;
-  outline: none!important;
-}
-</style>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="/js/RTCMultiConnection.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/fbr/FileBufferReader.js"></script>
+    <script src="/recordrtc/RecordRTC.js"></script>
+
+    <script src="/canvas-designer/dev/webrtc-handler.js"></script>
+    <script src="/canvas-designer/canvas-designer-widget.js"></script>
+    <script src="/js/emojionearea-3.4.1.js"></script>
+    <script src="/webrtc-screen-capturing/getScreenId.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- <script src="/node_modules/multistreamsmixer/MultiStreamsMixer.js"></script> -->
+
+    <style type="text/css">
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            font-size: 17px;
+            line-height: 1.5em;
+        }
+        
+        input[disabled],
+        button[disabled] {
+            background: transparent!important;
+            color: #dcd7d7!important;
+            border: 1px solid #dcd7d7!important;
+            cursor: not-allowed!important;
+            text-shadow: none!important;
+            box-shadow: none!important;
+            text-decoration: none!important;
+            outline: none!important;
+        }
+    </style>
 </head>
+
 <body onload="kelasVirtual()">
-<style>
-.extra-controls {
-    position: absolute;
-    right: 21%;
-}
-#btn-comments {
-  color: red;
-  margin-top: 5px;
-  font-size: 24px;
-  text-shadow: 1px 1px white;
-}
-#other-videos {
-    margin-top: 5px;
-    font-size: 50%;
-    overflow: hidden;
-    overflow-y: auto;
-    height: 300px;
-}
-#other-videos .video-player{
-    display: inline-block;
-    width: 50%;
-    margin-top: 5px;
-    padding: 1px;
-    border-radius: 3px;
-    
-}
-#txt-chat-message {
-    width: 100%;
-    resize: vertical;
-    margin: 5px;
-    margin-right: 0;
-    min-height: 30px;
-}
-#btn-chat-message {
-    margin: 5px;
-}
-#conversation-panel {
-    margin-bottom: 20px;
-    text-align: left;
-    height: 540px;
-    overflow: scroll;
-    border-top: 1px solid #E5E5E5;
-    /*width: 106%;*/
-}
-#conversation-panel .message {
-    border-bottom: 1px solid #E5E5E5;
-    padding: 5px 10px;
-}
-#conversation-panel .message img, #conversation-panel .message video, #conversation-panel .message iframe {
-    max-width: 100%;
-}
+    <style>
+        .extra-controls {
+            position: absolute;
+            right: 21%;
+        }
+        
+        #btn-comments {
+            color: red;
+            margin-top: 5px;
+            font-size: 24px;
+            text-shadow: 1px 1px white;
+        }
+        
+        #other-videos {
+            margin-top: 5px;
+            font-size: 50%;
+            overflow: hidden;
+            overflow-y: auto;
+            height: 300px;
+        }
+        
+        #other-videos .video-player {
+            display: inline-block;
+            width: 50%;
+            margin-top: 5px;
+            padding: 1px;
+            border-radius: 3px;
+        }
+        
+        #txt-chat-message {
+            width: 100%;
+            resize: vertical;
+            margin: 5px;
+            margin-right: 0;
+            min-height: 30px;
+        }
+        
+        #btn-chat-message {
+            margin: 5px;
+        }
+        
+        #conversation-panel {
+            margin-bottom: 20px;
+            text-align: left;
+            height: 540px;
+            overflow: scroll;
+            border-top: 1px solid #E5E5E5;
+            /*width: 106%;*/
+        }
+        
+        #conversation-panel .message {
+            border-bottom: 1px solid #E5E5E5;
+            padding: 5px 10px;
+        }
+        
+        #conversation-panel .message img,
+        #conversation-panel .message video,
+        #conversation-panel .message iframe {
+            max-width: 100%;
+        }
+        
+        hr {
+            height: 1px;
+            border: 0;
+            background: #E5E5E5;
+        }
+        
+        #btn-attach-file {
+            width: 25px;
+            vertical-align: middle;
+            cursor: pointer;
+            display: none;
+        }
+        
+        #btn-share-screen {
+            width: 25px;
+            vertical-align: middle;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .checkmark {
+            display: none;
+            width: 15px;
+            vertical-align: middle;
+        }
+        
+        #screen-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999999999999;
+            display: none;
+        }
+    </style>
+    <script>
+        var kelas = <%- JSON.stringify(data) %>;console.log(kelas.nama)
+    </script>
 
-hr {
-    height: 1px;
-    border: 0;
-    background: #E5E5E5;
-}
-#btn-attach-file {
-    width: 25px;
-    vertical-align: middle;
-    cursor: pointer;
-    display: none;
-}
-#btn-share-screen {
-    width: 25px;
-    vertical-align: middle;
-    cursor: pointer;
-    display: none;
-}
-.checkmark {
-    display:none;
-    width: 15px;
-    vertical-align: middle;
-}
-#screen-viewer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999999999999;
-    display: none;
-}
-</style>
-<script>var kelas =  <%- JSON.stringify(data) %>;console.log(kelas.nama)</script>
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <a class="navbar-brand" href="#">Navbar</a>
-  <div id="clockdiv">
-		<div><span class="hari"></span><div class="smalltext">Hari</div></div>
-		<div><span class="jam"></span><div class="smalltext">Jam</div></div>
-		<div><span class="menit"></span><div class="smalltext">Menit</div></div>
-		<div><span class="detik"></span><div class="smalltext">Detik</div></div>
-</div>
-  <div class="collapse navbar-collapse" id="navbarNav">
-  </div>
-  <div class="navbar-form navbar-left">
-      <a id="generate-link"></a>
-    <button type="button" class="btn btn-light" id="btn-camera">Camera</button>
-    <button type="button" class="btn btn-light" id="sync">Save</button>
-    <button type="button" class="btn btn-light" id="handsup" style="display:none">Acungkan Tangan</button>
-    <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="bottom" id="btn-generate-link">Generate Link</button>
-  </div>
-</nav>
-<div class="container-fluid" style="margin-top:1%;border: 1px solid black;">
-    <div class="row">
-        <div class="col-3">
-            <video id="screen-viewer" controls playsinline autoplay></video>
-            <div style="width: 100%;margin-top:5%">
-                <div id="main-video" style="width: 100%;"></div>
-                <div id="other-videos"></div>
-                <hr>
-                <div style="padding: 5px 10px;">
-                    <div id="onUserStatusChanged"></div>
-                </div>
-                <canvas id="temp-stream-canvas" style="display: none;"></canvas>
-            </div>            
+    <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+        <a class="navbar-brand" href="#"><%= data.namaRuangan %></a>
+        <i class="material-icons" style="color:white;">access_alarm</i>
+        <div id="clockdiv">
+            <div><span class="hari" style="display:none;"></span></div>
+            <div><span class="jam"></span>:</div>
+            <div><span class="menit"></span>:</div>
+            <div><span class="detik"></span></div>
         </div>
-        <div class="col-6">
-            <div id="widget-container" ></div>
+        <div class="collapse navbar-collapse" id="navbarNav">
         </div>
-        <div class="col-3">
-            <div style="margin-top: 20px;bottom: 0;background: white; padding-bottom: 20px; width: 100%;">
-                <div id="conversation-panel"></div>
-                <div id="key-press" style="text-align: right; font-size: 11px;">
-                    <span style="vertical-align: middle;"></span>
+        <div class="navbar-form navbar-left">
+            <div class="d-block p-2">
+                <button type="button" class="btn btn-light" id="btn-camera">Rekam</button>
+                <button type="button" class="btn btn-light" id="btn-stop">Stop Rekam</button>
+                <button type="button" class="btn btn-light" id="sync">Save</button>
+            </div>
+            <div class="p-2">
+                <button type="button" class="btn btn-light" id="btn-start-class">Start Class</button>
+                <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="bottom" id="btn-generate-link">Generate Link</button>
+            </div>
+            <div class="d-inline p-2">
+                
+            </div>
+        </div>
+        <button type="button" class="btn btn-light" id="handsup" style="display:none"><i class="material-icons">pan_tool</i></button>
+    </nav>
+    <div class="container-fluid" style="margin-top:1%;border: 1px solid black;">
+        <div class="row">
+            <div class="col-3">
+                <video id="screen-viewer" controls playsinline autoplay></video>
+                <div style="width: 100%;margin-top:5%">
+                    <div id="main-video" style="width: 100%;"></div>
+                    <div id="other-videos"></div>
+                    <hr>
+                    <div style="padding: 5px 10px;">
+                        <div id="onUserStatusChanged"></div>
+                    </div>
+                    <canvas id="temp-stream-canvas" style="display: none;"></canvas>
                 </div>
-                <textarea id="txt-chat-message"></textarea>
-                <label for="receiver"> Send to: </label>
-                <select id="set-receiver" class="form-control" style="width:50%"></select>
-                <img id="btn-attach-file" src="https://www.iconbunny.com/icons/media/catalog/product/9/6/969.9-attachment-icon-iconbunny.jpg" title="Attach a File">
-                <button class="btn btn-primary" id="btn-chat-message" disabled>Send</button>
+            </div>
+            <div class="col-6">
+                <div id="widget-container"></div>
+            </div>
+            <div class="col-3">
+                <div style="margin-top: 20px;bottom: 0;background: white; padding-bottom: 20px; width: 100%;">
+                    <div id="conversation-panel"></div>
+                    <div id="key-press" style="text-align: right; font-size: 11px;">
+                        <span style="vertical-align: middle;"></span>
+                    </div>
+                    <textarea id="txt-chat-message"></textarea>
+                    <label for="receiver"> Send to: </label>
+                    <select id="set-receiver" class="form-control" style="width:50%"></select>
+                    <img id="btn-attach-file" src="https://www.iconbunny.com/icons/media/catalog/product/9/6/969.9-attachment-icon-iconbunny.jpg"
+                        title="Attach a File">
+                    <button class="btn btn-primary" id="btn-chat-message" disabled>Send</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<script src="/js/hTimer.js"></script>
-<script src="/js/hKelasVirtual.js"></script>
+    <script src="/js/hTimer.js"></script>
+    <script src="/js/hKelasVirtual.js"></script>
 </body>
+
 </html>
