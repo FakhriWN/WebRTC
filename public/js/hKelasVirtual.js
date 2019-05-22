@@ -101,11 +101,17 @@ function kelasVirtual() {
         placement: 'top',
         content: '<a id="a-link" href='+link+' value='+link+'>'+link+'</a><br><button onclick=copyLink(' + JSON.stringify(link) + ')>Copy</button>'
     });
-    var btnIzin = document.getElementById('izin');
     var btnSync = document.getElementById('sync');
-    var kick = document.getElementById('kick');
-    btnIzin.addEventListener('click', function () {
-        giveAccesCanvas(ToolAccess, SyncLocalRemoteCanvas);
+    var btnHandsup = document.getElementById('handsup');
+    if(kelas.open === 'false'){
+        console.log("Masuk hands");
+        btnHandsup.style.display = "inline";
+    }
+    btnHandsup.addEventListener('click',function(){
+        connection.send({
+            id: connection.userid,
+            type: "atensi"
+        });
     });
     btnSync.addEventListener('click', function () {
         recorder.save();
@@ -224,6 +230,15 @@ function kelasVirtual() {
         if (event.data.typing === false) {
             $('#key-press').hide().find('span').html('');
             return;
+        }
+        if (event.data.type == "atensi") {
+            if(connection.userid != event.data.id){
+                var namaPartisipan = getFullName(event.data.id);
+                $.notify({
+                    // options
+                    message: namaPartisipan + ' mengacungkan tangan!' 
+                }); 
+            }
         }
         if (event.data.chatMessage) {
             if (event.data.receiver_id == 'All' || event.data.receiver_id == connection.userid) { //cek penerima pesan diedit
@@ -359,14 +374,6 @@ function kelasVirtual() {
             mainVideo.appendChild(div);
             $('#main-video').show();
         } else {
-            if (!isdeklarasi) {
-                console.log(event.userid);
-                kick.addEventListener('click', function () {
-                    //connection.deletePeer(event.userid);
-                    window.location.href = 'https://newurl.com'
-                });
-                isdeklarasi = true;
-            }
 
             console.log('Not Owner');
 

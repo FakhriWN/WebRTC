@@ -36,6 +36,7 @@ function run_clock(id,_waktuBerakhir){
 				message: 'Waktu sudah habis' 
 			}); 
 		}
+	}
 	update_clock();
 	var timeinterval = setInterval(update_clock,1000);
 }
