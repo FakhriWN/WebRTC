@@ -49,33 +49,39 @@ function kelasVirtual() {
             console.log(tempDataCanvasLocal);
             connection.send(data);
         });
+        btnClear.style.display = 'none'
+        btnClear.addEventListener("click", function(){
+            papanTulisIn.clearCanvas();
+        });
+
+
         papanTulisIn.setSelected('pencil');
         papanTulisIn.setTools({
             pencil: true,
             text: true,
-            image: true,
+            image: false,
             pdf: true,
             eraser: true,
             line: true,
             arrow: true,
-            dragSingle: true,
+            dragSingle: false,
             dragMultiple: true,
             arc: true,
             rectangle: true,
             quadratic: false,
-            bezier: true,
-            marker: true,
+            bezier: false,
+            marker: false,
             zoom: false,
             lineWidth: false,
             colorsPicker: true,
-            extraOptions: true,
+            extraOptions: false,
             code: false,
-            undo: true
+            undo: false
         });
         var ToolAccess = {
             pencil: true,
             text: true,
-            image: true,
+            image: false,
             pdf: true,
             eraser: true,
             line: true,
@@ -86,13 +92,13 @@ function kelasVirtual() {
             rectangle: false,
             quadratic: false,
             bezier: false,
-            marker: true,
+            marker: false,
             zoom: false,
             lineWidth: false,
             colorsPicker: true,
             extraOptions: false,
             code: false,
-            undo: true
+            undo: false
         }
     }
     var link = location.origin + '/kelas/bergabung?sessionid=' + kelas.sessionid;
@@ -103,6 +109,8 @@ function kelasVirtual() {
     });
     var btnSync = document.getElementById('sync');
     var btnHandsup = document.getElementById('handsup');
+    var btnClear= document.getElementById("clear");
+
     if(kelas.open === 'false'){
         console.log("Masuk hands");
         btnHandsup.style.display = "inline";
@@ -163,6 +171,11 @@ function kelasVirtual() {
                 content: '<button>Berikan Izin</button><br><button onclick=kickParticipant(' + JSON.stringify(event.userid) + ')>Keluarkan</button>'
             })
         });
+
+        //M.Ridwan - ditampilkan hanya untuk fasilitator
+        if(connection.userid == event.userid && event.extra.roomOwner){
+            btnClear.style.display = 'inline-block';
+        }
 
         infoBar.innerHTML = '';
         connection.getAllParticipants().forEach(function (pid) {
@@ -818,6 +831,7 @@ function kelasVirtual() {
         });
     });
     run_clock('clockdiv', deadline);
+    globalVar.connection = connection;
 }
 
 function kickParticipant(id) {
