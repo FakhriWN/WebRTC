@@ -102,6 +102,7 @@ var btnHandsup = document.getElementById('handsup');
 var btnStartClass = document.getElementById('btn-start-class');
 var btnClear = document.getElementById("clear");
 var btnGenerateLink = document.getElementById("btn-generate-link");
+var aNamaRuangan = document.getElementById('namaRuangan');
 
 if (kelas.open === 'false') {
     btnHandsup.style.display = "inline";
@@ -378,6 +379,7 @@ connection.onstream = function (event) {
     }
     else if (event.extra.roomOwner === true) {
         //console.log('Owner');
+        aNamaRuangan.innerHTML = event.extra.nama +' '+ kelas.namaRuangan;
         var recordObject = connection.streamEvents[event.streamid].stream;
         var medWidth = $('#main-video').width() - 20;
         var medHeight = 250;
