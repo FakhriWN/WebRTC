@@ -117,6 +117,7 @@ if (kelas.open === 'false') {
     btnStartClass.style.display = "inline";
     btnGenerateLink.style.display = 'inline';
     btnSaveRekam.style.display = 'inline';
+    btnClear.style.display = 'inline';
 }
 btnHandsup.addEventListener('click', function () {
     connection.send({
@@ -178,21 +179,6 @@ connection.onUserStatusChanged = function (event) {
     var infoBar = document.getElementById('onUserStatusChanged');
     var names = [];
 
-    //M.Ridwan H D P - Fungsi popup
-    $(function () {
-        $('[data-toggle="popover"]').popover({
-            html: true,
-            placement: 'top',
-            trigger: 'focus',
-            content: '<button onclick=kickParticipant(' + JSON.stringify(event.userid) + ')>Keluarkan</button>'
-        })
-    });
-
-    //M.Ridwan - ditampilkan hanya untuk fasilitator
-    if (connection.userid == event.userid && event.extra.roomOwner) {
-        btnClear.style.display = 'inline-block';
-    }
-
     infoBar.innerHTML = '';
     connection.getAllParticipants().forEach(function (pid) {
         names.push(pid);
@@ -211,15 +197,24 @@ connection.onUserStatusChanged = function (event) {
     names.forEach(function (item) {
         // console.log(item);
         // console.log(event.extra.idFasilitator);
+            //M.Ridwan H D P - Fungsi popup
+        $(function () {
+            $('[data-toggle="popover"]').popover({
+                html: true,
+                placement: 'top',
+                trigger: 'focus',
+                content: '<button onclick=kickParticipant(' + JSON.stringify(item) + ')>Keluarkan</button>'
+            })
+        });
         var btn = document.createElement('button');
         btn.setAttribute('type', 'button');
         btn.setAttribute('class', 'btn btn-secondary btn-partcipant');
-        btn.setAttribute('data-container', 'body');
-        btn.setAttribute('data-toggle', 'popover');
+        if(kelas.idowner == connection.userid){
+            btn.setAttribute('data-container', 'body');
+            btn.setAttribute('data-toggle', 'popover');
+        }
         // btn.setAttribute('onClick','kickParticipant('+JSON.stringify(event.userid)+')');
         btn.innerHTML = getFullName(item);
-        console.log(kelas.idowner);
-        console.log(item);
         if (kelas.idowner != item) {
             infoBar.appendChild(btn);
         }
