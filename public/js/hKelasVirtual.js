@@ -44,12 +44,13 @@ function initPapanTulisIn() {
     btnClear.style.display = 'none'
     btnClear.addEventListener("click", function () {
         papanTulisIn.clearCanvas();
+        papanTulisIn.sync();
     });
     papanTulisIn.setSelected('pencil');
     papanTulisIn.setTools({
             pencil: true,
             text: true,
-            image: false,
+            image: true,
             pdf: true,
             eraser: true,
             line: true,
@@ -91,7 +92,12 @@ function initPapanTulisIn() {
         undo: false
     }
 }
-var link = location.origin + '/kelas/bergabung?sessionid=' + kelas.sessionid;
+if(kelas.open == 'true'){
+    console.log('memamng owner');
+    console.log(connection.userid);
+    kelas.idowner = connection.userid;
+}
+var link = location.origin + '/kelas/bergabung?sessionid=' + kelas.sessionid+'&idowner='+connection.userid;
 $('#btn-generate-link').popover({
     html: true,
     placement: 'top',
@@ -103,12 +109,14 @@ var btnStartClass = document.getElementById('btn-start-class');
 var btnClear = document.getElementById("clear");
 var btnGenerateLink = document.getElementById("btn-generate-link");
 var aNamaRuangan = document.getElementById('namaRuangan');
+var btnSaveRekam = document.getElementById('btn-download');
 
 if (kelas.open === 'false') {
     btnHandsup.style.display = "inline";
 }else{
     btnStartClass.style.display = "inline";
     btnGenerateLink.style.display = 'inline';
+    btnSaveRekam.style.display = 'inline';
 }
 btnHandsup.addEventListener('click', function () {
     connection.send({
@@ -176,7 +184,7 @@ connection.onUserStatusChanged = function (event) {
             html: true,
             placement: 'top',
             trigger: 'focus',
-            content: '<button>Berikan Izin</button><br><button onclick=kickParticipant(' + JSON.stringify(event.userid) + ')>Keluarkan</button>'
+            content: '<button onclick=kickParticipant(' + JSON.stringify(event.userid) + ')>Keluarkan</button>'
         })
     });
 
@@ -192,28 +200,34 @@ connection.onUserStatusChanged = function (event) {
     if (!names.length) {
         names = ['Only You'];
     } else {
-        //names = [connection.extra.userFullName || 'You'].concat(names);
+        console.log(connection.extra.roomOwner);
+        if(typeof connection.extra.roomOwner == 'undefined'){
+            console.log('Bukan Owwwwwner');
+            //names = [connection.extra.userFullName].concat(names);
+            names.push(connection.extra.userFullName);
+        }
     }
-    console.log('start');
+    
     names.forEach(function (item) {
         // console.log(item);
         // console.log(event.extra.idFasilitator);
-        // if (typeof event.extra.idFasilitator == 'undefined') {
-            var btn = document.createElement('button');
-            btn.setAttribute('type', 'button');
-            btn.setAttribute('class', 'btn btn-secondary btn-partcipant');
-            btn.setAttribute('data-container', 'body');
-            btn.setAttribute('data-toggle', 'popover');
-            // btn.setAttribute('onClick','kickParticipant('+JSON.stringify(event.userid)+')');
-            btn.innerHTML = getFullName(item);
+        var btn = document.createElement('button');
+        btn.setAttribute('type', 'button');
+        btn.setAttribute('class', 'btn btn-secondary btn-partcipant');
+        btn.setAttribute('data-container', 'body');
+        btn.setAttribute('data-toggle', 'popover');
+        // btn.setAttribute('onClick','kickParticipant('+JSON.stringify(event.userid)+')');
+        btn.innerHTML = getFullName(item);
+        console.log(kelas.idowner);
+        console.log(item);
+        if (kelas.idowner != item) {
             infoBar.appendChild(btn);
-        // }
+        }
     });
-
 };
 connection.onopen = function (event) {
     console.log('OnOpen');
-    connection.onUserStatusChanged(event);
+    //connection.onUserStatusChanged(event);
     console.log(papanTulisIn.pointsLength);
     if (papanTulisIn.pointsLength <= 0) {
         // make sure that remote user gets all drawings synced.
@@ -287,6 +301,8 @@ connection.onmessage = function (event) {
             connection.attachStreams.forEach(function (localStream) {
                 localStream.stop();
             });
+
+            connection.closeSocket();
         }
     }
     if (event.data.chatMessage) {
@@ -314,12 +330,6 @@ connection.onmessage = function (event) {
     if (event.data.unmuteid === connection.userid) {
         var streamByUserId = connection.streamEvents.selectFirst({ userid: event.data.unmuteid }).stream;
         streamByUserId.unmute(event.data.type);
-        return;
-    }
-    if(event.data.type == "urlblob"){//Video Record terkirim
-        document.getElementById('btn-download').href = event.data.url;
-        document.getElementById('btn-download').style.cursor = 'pointer';
-        document.getElementById('btn-download').download = event.data.filename; 
         return;
     }
     papanTulisIn.syncData(event.data);
@@ -379,7 +389,8 @@ connection.onstream = function (event) {
     }
     else if (event.extra.roomOwner === true) {
         //console.log('Owner');
-        aNamaRuangan.innerHTML = event.extra.nama +' '+ kelas.namaRuangan;
+        connection.extra.idFasilitator = event.extra.idFasilitator;
+        aNamaRuangan.innerHTML = event.extra.nama +' '+ event.extra.namaRuangan;
         var recordObject = connection.streamEvents[event.streamid].stream;
         var medWidth = $('#main-video').width() - 20;
         var medHeight = 250;
@@ -411,22 +422,16 @@ connection.onstream = function (event) {
                 // www.RTCMultiConnection.org/docs/stopRecording/
                 recorder.stopRecording(function (url, type) {
                     var d = new Date(connection.extra.waktuMulai);
-                    var filename = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+ d.getDate()+'_'+d.getHours()+':'+d.getMinutes()+'_'+ kelas.namaRuangan +'_'+ event.extra.nama;
+                    var filename = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+ d.getDate()+'_'+d.getHours()+'-'+d.getMinutes()+'_'+ kelas.namaRuangan +'_'+ event.extra.nama;
                     console.log('Recording Stopped');
-                    console.log(d);
                     //invokeSaveAsDialog(recorder.getBlob());
                     var url = URL.createObjectURL(recorder.getBlob());
-                    document.getElementById('btn-download').href = url;
-                    document.getElementById('btn-download').style.cursor = 'pointer';
-                    document.getElementById('btn-download').download = filename; 
-                    console.log(document.getElementById('btn-download').download);
-                    connection.send({
-                        type: 'urlblob',
-                        url: url,
-                        filename : filename
-                    });
+                    btnSaveRekam.href = url;
+                    btnSaveRekam.style.cursor = 'pointer';
+                    btnSaveRekam.download = filename; 
                 });
             },
+            showOnMouseEnter: true,
         });
         div.appendChild(mediaElement);
         if (typeof connection.extra.streamid == 'undefined') {
@@ -474,7 +479,8 @@ connection.onstream = function (event) {
                     });
                 }
 
-            }
+            },
+            showOnMouseEnter: true,
         });
         div.appendChild(mediaElement);
         otherVideos.appendChild(div);
@@ -706,15 +712,9 @@ function persiapanKelas() {
         papanTulisIn.iframe.style.border = '2px solid black';
         if (kelas.open === true || kelas.open === 'true') {
             console.log('Append Canvas');
-            // var tempStreamCanvas = document.getElementById('temp-stream-canvas');
-            // var tempStream = tempStreamCanvas.captureStream();
-            // tempStream.isScreen = true;
-            // tempStream.streamid = tempStream.id;
-            // tempStream.type = 'local';
-            // connection.attachStreams.push(tempStream);
-            // window.tempStream = tempStream;
             //Fakhri Waliyyuddin Nugraha
             connection.extra.nama = kelas.nama;
+            connection.extra.namaRuangan = kelas.namaRuangan;
             connection.extra.waktuMulai = new Date();
             connection.extra.durasi = kelas.durasi;
             connection.extra.waktuBerakhir = connection.extra.waktuMulai;
@@ -763,7 +763,7 @@ function persiapanKelas() {
                     alert(error);
                 }
                 connection.socket.on('disconnect', function () {
-                    location.reload();
+                    //location.reload();
                 });
             });
         }

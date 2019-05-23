@@ -48,11 +48,9 @@ function getDataForm(){
     var PRI = document.getElementById('PRI');
     if(params.sessionid){
         sessionId.value = params.sessionid;
+        document.getElementById('idowner').value = params.idowner;
     }else{
         sessionId.value = connection.token();
-        document.getElementById('cek').addEventListener('click',function(){
-            alert('good');
-        });
     }
     PRI.value = connection.publicRoomIdentifier;
 }
