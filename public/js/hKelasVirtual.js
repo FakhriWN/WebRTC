@@ -313,9 +313,10 @@ connection.onmessage = function (event) {
         streamByUserId.unmute(event.data.type);
         return;
     }
-    if(event.data.type == "urlblob"){
+    if(event.data.type == "urlblob"){//Video Record terkirim
         document.getElementById('btn-download').href = event.data.url;
         document.getElementById('btn-download').style.cursor = 'pointer';
+        document.getElementById('btn-download').download = event.data.filename; 
         return;
     }
     papanTulisIn.syncData(event.data);
@@ -405,14 +406,20 @@ connection.onstream = function (event) {
             onRecordingStopped: function (type) {
                 // www.RTCMultiConnection.org/docs/stopRecording/
                 recorder.stopRecording(function (url, type) {
+                    var d = new Date(connection.extra.waktuMulai);
+                    var filename = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+ d.getDate()+'_'+d.getHours()+':'+d.getMinutes()+'_'+ kelas.namaRuangan +'_'+ event.extra.nama;
                     console.log('Recording Stopped');
+                    console.log(d);
                     //invokeSaveAsDialog(recorder.getBlob());
                     var url = URL.createObjectURL(recorder.getBlob());
                     document.getElementById('btn-download').href = url;
                     document.getElementById('btn-download').style.cursor = 'pointer';
+                    document.getElementById('btn-download').download = filename; 
+                    console.log(document.getElementById('btn-download').download);
                     connection.send({
                         type: 'urlblob',
-                        url: url
+                        url: url,
+                        filename : filename
                     });
                 });
             },
@@ -703,6 +710,7 @@ function persiapanKelas() {
             // connection.attachStreams.push(tempStream);
             // window.tempStream = tempStream;
             //Fakhri Waliyyuddin Nugraha
+            connection.extra.nama = kelas.nama;
             connection.extra.waktuMulai = new Date();
             connection.extra.durasi = kelas.durasi;
             connection.extra.waktuBerakhir = connection.extra.waktuMulai;
