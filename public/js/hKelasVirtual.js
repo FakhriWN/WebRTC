@@ -25,15 +25,10 @@ connection.socketMessageEvent = 'canvas-dashboard';
 // keep room opened even if owner leaves
 connection.autoCloseEntireSession = true;
 // https://www.rtcmulticonnection.org/docs/maxParticipantsAllowed/
-connection.maxParticipantsAllowed = kelas.maxPartisipan;
+connection.maxParticipantsAllowed = parseInt(kelas.maxPartisipan)+1;
 // set value 2 for one-to-one connection
 var papanTulisIn = new CanvasDesigner();
-var recorder = new MRecordRTC();
-recorder.mimeType = {
-    audio: 'audio/wav',
-    video: 'video/webm',
-    gif: 'image/gif'
-};
+var recorder;
 var tempDataCanvasLocal = [];
 var tempDataCanvasRemote = [];
 
@@ -50,31 +45,29 @@ function initPapanTulisIn() {
     btnClear.addEventListener("click", function () {
         papanTulisIn.clearCanvas();
     });
-
-
     papanTulisIn.setSelected('pencil');
     papanTulisIn.setTools({
-        pencil: true,
-        text: true,
-        image: false,
-        pdf: true,
-        eraser: true,
-        line: true,
-        arrow: true,
-        dragSingle: false,
-        dragMultiple: true,
-        arc: true,
-        rectangle: true,
-        quadratic: false,
-        bezier: false,
-        marker: false,
-        zoom: false,
-        lineWidth: false,
-        colorsPicker: true,
-        extraOptions: false,
-        code: false,
-        undo: false
-    });
+            pencil: true,
+            text: true,
+            image: false,
+            pdf: true,
+            eraser: true,
+            line: true,
+            arrow: true,
+            dragSingle: true,
+            dragMultiple: true,
+            arc: true,
+            rectangle: true,
+            quadratic: false,
+            bezier: false,
+            marker: false,
+            zoom: false,
+            lineWidth: true,
+            colorsPicker: true,
+            extraOptions: false,
+            code: false,
+            undo: false
+        });
     var ToolAccess = {
         pencil: true,
         text: true,
@@ -104,13 +97,15 @@ $('#btn-generate-link').popover({
     placement: 'top',
     content: '<a id="a-link" href=' + link + ' value=' + link + '>' + link + '</a><br><button class="btn btn-secondary btn-sm" onclick=copyLink(' + JSON.stringify(link) + ')>Copy</button>'
 });
-var btnSync = document.getElementById('sync');
+// var btnSync = document.getElementById('sync');
 var btnHandsup = document.getElementById('handsup');
+var btnStartClass = document.getElementById('btn-start-class');
 var btnClear = document.getElementById("clear");
 
 if (kelas.open === 'false') {
-    console.log("Masuk hands");
     btnHandsup.style.display = "inline";
+}else{
+    btnStartClass.style.display = "inline";
 }
 btnHandsup.addEventListener('click', function () {
     connection.send({
@@ -118,9 +113,22 @@ btnHandsup.addEventListener('click', function () {
         type: "atensi"
     });
 });
-btnSync.addEventListener('click', function () {
-    recorder.save();
+
+//Fakhri Waliyyuddin Nugraha
+btnStartClass.addEventListener('click',function() {
+    connection.extra.waktuMulai = new Date();
+    connection.extra.waktuBerakhir = connection.extra.waktuMulai;
+    connection.extra.waktuBerakhir.setMinutes(connection.extra.waktuMulai.getMinutes() + connection.extra.durasi)
+    run_clock('clockdiv', connection.extra.waktuBerakhir, true);
+    connection.extra.timer = true;
+    connection.updateExtraData();
+    console.log(connection.extra.timer);
+    connection.send({
+        type: 'timer',
+        waktuMulai : connection.extra.waktuMulai
+    });
 });
+
 //Oleh Fakhri Waliyyuddin Nugraha
 function giveAccesCanvas(Tools, _callback) {
     console.log('Give Access Canvas');
@@ -176,25 +184,28 @@ connection.onUserStatusChanged = function (event) {
 
     infoBar.innerHTML = '';
     connection.getAllParticipants().forEach(function (pid) {
-        names.push(getFullName(pid));
+        names.push(pid);
     });
     if (!names.length) {
         names = ['Only You'];
     } else {
-        names = [connection.extra.userFullName || 'You'].concat(names);
+        //names = [connection.extra.userFullName || 'You'].concat(names);
     }
-
+    console.log('start');
     names.forEach(function (item) {
-        var btn = document.createElement('button');
-        btn.setAttribute('type', 'button');
-        btn.setAttribute('class', 'btn btn-secondary btn-partcipant');
-        btn.setAttribute('data-container', 'body');
-        btn.setAttribute('data-toggle', 'popover');
-        // btn.setAttribute('onClick','kickParticipant('+JSON.stringify(event.userid)+')');
-
-        btn.innerHTML = item;
-        infoBar.appendChild(btn);
-    })
+        // console.log(item);
+        // console.log(event.extra.idFasilitator);
+        // if (typeof event.extra.idFasilitator == 'undefined') {
+            var btn = document.createElement('button');
+            btn.setAttribute('type', 'button');
+            btn.setAttribute('class', 'btn btn-secondary btn-partcipant');
+            btn.setAttribute('data-container', 'body');
+            btn.setAttribute('data-toggle', 'popover');
+            // btn.setAttribute('onClick','kickParticipant('+JSON.stringify(event.userid)+')');
+            btn.innerHTML = getFullName(item);
+            infoBar.appendChild(btn);
+        // }
+    });
 
 };
 connection.onopen = function (event) {
@@ -209,7 +220,6 @@ connection.onopen = function (event) {
     }
     document.getElementById('btn-chat-message').disabled = false;
     document.getElementById('btn-attach-file').style.display = 'inline-block';
-    document.getElementById('btn-share-screen').style.display = 'inline-block';
 };
 connection.onclose = connection.onerror = connection.onleave = function (event) {
     connection.onUserStatusChanged(event);
@@ -249,6 +259,32 @@ connection.onmessage = function (event) {
                 message: namaPartisipan + ' mengacungkan tangan!'
             });
         }
+        return;
+    }
+    if (event.data.type == "timer") {
+        console.log(event.data.waktuMulai);
+        connection.extra.waktuMulai = new Date();
+        connection.extra.waktuBerakhir = connection.extra.waktuMulai;
+        connection.extra.waktuBerakhir.setMinutes(connection.extra.waktuMulai.getMinutes() + connection.extra.durasi)
+        run_clock('clockdiv', connection.extra.waktuBerakhir, true);
+        return;
+    }
+    if(event.data.type == 'kick'){
+        if(event.data.userid == connection.userid){
+                $.notify({
+                // options
+                message: 'Anda telah dikeluarkan dari kelas'
+            });
+            // disconnect with all users
+            connection.getAllParticipants().forEach(function (pid) {
+                connection.disconnectWith(pid);
+            });
+
+            // stop all local cameras
+            connection.attachStreams.forEach(function (localStream) {
+                localStream.stop();
+            });
+        }
     }
     if (event.data.chatMessage) {
         if (event.data.receiver_id == 'All' || event.data.receiver_id == connection.userid) { //cek penerima pesan diedit
@@ -277,39 +313,48 @@ connection.onmessage = function (event) {
         streamByUserId.unmute(event.data.type);
         return;
     }
+    if(event.data.type == "urlblob"){
+        document.getElementById('btn-download').href = event.data.url;
+        document.getElementById('btn-download').style.cursor = 'pointer';
+        return;
+    }
     papanTulisIn.syncData(event.data);
     tempDataCanvasRemote.push(event.data);
 };
 
 // Created by Fadhil Shofian
 function setReceiverSelected(event) {
-    console.log('Masuk Selected');
     var setReceiver = document.getElementById('set-receiver');
     // setReceiver.removeChild(setReceiver);
     setReceiver.innerHTML = '';
-    console.log('Masuk Selected2');
     var option = document.createElement('option');
     var names = [];
     connection.getAllParticipants().forEach(function (pid) {
-        console.log('Masuk Selected3');
         names.push(pid);
     });
-    console.log(names);
     // if (!names.length) {
     option.value = 'All';
     option.innerHTML = 'All';
-    console.log(option.value);
     setReceiver.add(option);
     // } else {
-    console.log(names.length);
     for (var i = 0; i < names.length; i++) {
         var option2 = document.createElement('option');
         option2.value = names[i];
         option2.innerHTML = getFullName(names[i]);
-        console.log(option2.value);
         setReceiver.add(option2);
     }
     // }
+}
+function isTimerStart(event) {
+    if (event.extra.timer) { //Mendapatkan waktu berakhir dari dimulainya menekan tombol start button
+        run_clock('clockdiv', Date.parse(new Date(event.extra.waktuBerakhir)), true);
+    } else { // Mendapatkan durasi kelas
+        connection.extra.waktuMulai = new Date();
+        connection.extra.durasi = parseInt(event.extra.durasi);
+        connection.extra.waktuBerakhir = connection.extra.waktuMulai;
+        connection.extra.waktuBerakhir.setMinutes(connection.extra.waktuMulai.getMinutes() + connection.extra.durasi);
+        run_clock('clockdiv', connection.extra.waktuBerakhir, false);
+    }
 }
 
 var isdeklarasi = false;
@@ -331,20 +376,19 @@ connection.onstream = function (event) {
     else if (event.extra.roomOwner === true) {
         //console.log('Owner');
         var recordObject = connection.streamEvents[event.streamid].stream;
-
         var medWidth = $('#main-video').width() - 20;
         var medHeight = 250;
+        isTimerStart(event);//Untuk mendapatkan waktu
         if (connection.isInitiator) {
-            button = ['mute-audio', 'volume-slider'];
+            button = ['mute-audio', 'volume-slider', 'record-video'];
         } else {
-            button = ['volume-slider', 'record-audio', 'record-video'];
+            button = ['volume-slider'];
         }
         var mediaElement = getMediaElement(event.mediaElement, {
             width: medWidth, //Pixel
             height: medHeight,
             buttons: button,
             onMuted: function (type) {
-                //console.log(type);
                 connection.streamEvents[event.streamid].stream.mute(type);
             },
             onUnMuted: function (type) {
@@ -353,22 +397,24 @@ connection.onstream = function (event) {
             },
             onRecordingStarted: function (type) {
                 // www.RTCMultiConnection.org/docs/startRecording/
-                recorder.addStream(recordObject);
-                recorder.mediaType = {
-                    audio: true, // or StereoAudioRecorder or MediaStreamRecorder
-                    video: true, // or WhammyRecorder or MediaStreamRecorder or WebAssemblyRecorder
-                    gif: false     // or GifRecorder
-                };
+                recorder = RecordRTC([recordObject], {
+                    type: 'video'
+                });
                 recorder.startRecording();
             },
             onRecordingStopped: function (type) {
                 // www.RTCMultiConnection.org/docs/stopRecording/
                 recorder.stopRecording(function (url, type) {
                     console.log('Recording Stopped');
-                    recorder.writeToDisk();
+                    //invokeSaveAsDialog(recorder.getBlob());
+                    var url = URL.createObjectURL(recorder.getBlob());
+                    document.getElementById('btn-download').href = url;
+                    document.getElementById('btn-download').style.cursor = 'pointer';
+                    connection.send({
+                        type: 'urlblob',
+                        url: url
+                    });
                 });
-
-                //recorder.destroy();
             },
         });
         div.appendChild(mediaElement);
@@ -397,7 +443,6 @@ connection.onstream = function (event) {
             toggle: event.type == 'local' ? ['mute-audio'] : [],
             onMuted: function (type) {
                 // www.RTCMultiConnection.org/docs/mute/
-                //connection.streamEvents[event.streamid].stream.mute(type);
                 if (event.type == 'remote') {
                     var streamByUserId = connection.streamEvents.selectFirst({ userid: event.userid }).stream;
                     streamByUserId.mute(type);
@@ -409,7 +454,6 @@ connection.onstream = function (event) {
             },
             onUnMuted: function (type) {
                 // www.RTCMultiConnection.org/docs/unmute/
-                //connection.streamEvents[event.streamid].stream.unmute(type);
                 if (event.type == 'remote') {
                     var streamByUserId = connection.streamEvents.selectFirst({ userid: event.userid }).stream;
                     streamByUserId.unmute(type);
@@ -648,16 +692,25 @@ function persiapanKelas() {
     initPapanTulisIn();
     var wc = document.getElementById('widget-container');
     papanTulisIn.appendTo(document.getElementById('widget-container'), function () {
+        papanTulisIn.iframe.style.border = '2px solid black';
         if (kelas.open === true || kelas.open === 'true') {
             console.log('Append Canvas');
-            var tempStreamCanvas = document.getElementById('temp-stream-canvas');
-            var tempStream = tempStreamCanvas.captureStream();
-            tempStream.isScreen = true;
-            tempStream.streamid = tempStream.id;
-            tempStream.type = 'local';
-            connection.attachStreams.push(tempStream);
-            window.tempStream = tempStream;
+            // var tempStreamCanvas = document.getElementById('temp-stream-canvas');
+            // var tempStream = tempStreamCanvas.captureStream();
+            // tempStream.isScreen = true;
+            // tempStream.streamid = tempStream.id;
+            // tempStream.type = 'local';
+            // connection.attachStreams.push(tempStream);
+            // window.tempStream = tempStream;
+            //Fakhri Waliyyuddin Nugraha
+            connection.extra.waktuMulai = new Date();
+            connection.extra.durasi = kelas.durasi;
+            connection.extra.waktuBerakhir = connection.extra.waktuMulai;
+            connection.extra.waktuBerakhir.setMinutes(connection.extra.waktuMulai.getMinutes() + parseInt(connection.extra.durasi));
+            run_clock('clockdiv', connection.extra.waktuBerakhir, false);
+            connection.extra.timer = false;
             connection.extra.roomOwner = true;
+            connection.extra.idFasilitator = connection.userid;
             connection.open(kelas.sessionid, function (isRoomOpened, roomid, error) {
                 if (error) {
                     if (error === connection.errors.ROOM_NOT_AVAILABLE) {
@@ -671,6 +724,7 @@ function persiapanKelas() {
                 });
             });
         } else {
+
             connection.join(kelas.sessionid, function (isRoomJoined, roomid, error) {
                 if (error) {
                     if (error === connection.errors.ROOM_NOT_AVAILABLE) {
@@ -703,7 +757,9 @@ function persiapanKelas() {
         }
     });
 }
-persiapanKelas();
+window.onload = function() {
+  persiapanKelas();
+};
 
 function addStreamStopListener(stream, callback) {
     stream.addEventListener('ended', function () {
@@ -816,12 +872,14 @@ $('#btn-share-screen').click(function () {
         });
     });
 });
-run_clock('clockdiv', deadline);
-globalVar.connection = connection;
 
 
 function kickParticipant(id) {
-    globalVar.connection.disconnectWith(id);
+    connection.send({
+        type : 'kick',
+        userid : id
+    })
+    //connection.disconnectWith(id);
 }
 function copyLink(_link) {
     const textArea = document.createElement('textarea');

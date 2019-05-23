@@ -1,9 +1,10 @@
 //var deadline = 'Dec 31 2020 00:00:00 GMT-0400';
-var waktu = new Date();
-var durasi = parseInt(kelas.durasi || 10);
-console.log(durasi);
-var deadline = waktu.setMinutes( waktu.getMinutes() + durasi);
-function sisa_waktu(_waktuBerakhir){
+//var waktu = new Date();
+//var durasi = parseInt(kelas.durasi || 10);
+//console.log(durasi);
+//var deadline = waktu.setMinutes( waktu.getMinutes() + durasi);
+function sisa_waktu(_waktuBerakhir, _isMulai){
+	
 	var t = _waktuBerakhir - Date.parse(new Date());
 	var detik = Math.floor( (t/1000) % 60 );
 	var menit = Math.floor( (t/1000/60) % 60 );
@@ -11,7 +12,7 @@ function sisa_waktu(_waktuBerakhir){
 	var hari = Math.floor( t/(1000*60*60*24) );
 	return {'total':t, 'hari':hari, 'jam':jam, 'menit':menit, 'detik':detik};
 }
-function run_clock(id,_waktuBerakhir){
+function run_clock(id,_waktuBerakhir, _isMulai){
 	var waktu = document.getElementById(id);
 				
 	// get spans where our clock numbers are held
@@ -21,8 +22,7 @@ function run_clock(id,_waktuBerakhir){
 	var detik_span = waktu.querySelector('.detik');
 
 	function update_clock(){
-		var t = sisa_waktu(_waktuBerakhir);
-		
+		var t = sisa_waktu(_waktuBerakhir, _isMulai);
 		// update the numbers in each part of the clock
 		hari_span.innerHTML = t.hari;
 		jam_span.innerHTML = ('0' + t.jam).slice(-2);
@@ -31,6 +31,9 @@ function run_clock(id,_waktuBerakhir){
 		
 		if(t.total<=0){ 
 			clearInterval(timeinterval);
+			jam_span.innerHTML = ('00').slice(-2);
+			menit_span.innerHTML = ('00').slice(-2);
+			detik_span.innerHTML = ('00').slice(-2);
 			$.notify({
 				// options
 				message: 'Waktu sudah habis' 
@@ -38,6 +41,9 @@ function run_clock(id,_waktuBerakhir){
 		}
 	}
 	update_clock();
-	var timeinterval = setInterval(update_clock,1000);
+	var timeinterval;
+	if(_isMulai){
+		timeinterval = setInterval(update_clock,1000);
+	}
 }
 //run_clock('clockdiv',deadline);

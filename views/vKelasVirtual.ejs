@@ -172,13 +172,11 @@
         </div>
         <div class="navbar-form navbar-left">
             <div class="d-block p-2">
-                <button type="button" class="btn btn-light" id="btn-camera">Rekam</button>
-                <button type="button" class="btn btn-light" id="btn-stop">Stop Rekam</button>
-                <button type="button" class="btn btn-light" id="sync">Save</button>
+                <a href="javascript:void(0)" class="btn btn-light" id="btn-download" download="video.webm" style="cursor: not-allowed;">Save Video</a>
+                <button type="button" class="btn btn-light" id="clear" style="display:none">Clear Whiteboard</button>
             </div>
             <div class="p-2">
-                <button type="button" class="btn btn-light" id="btn-start-class">Start Class</button>
-                <button type="button" class="btn btn-light" id="clear">Clear Whiteboard</button>
+                <button type="button" class="btn btn-light" id="btn-start-class" style="display:none";>Start Class</button>
                 <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="bottom" id="btn-generate-link">Generate Link</button>
             </div>
         </div>
