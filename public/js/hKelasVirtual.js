@@ -41,7 +41,6 @@ function initPapanTulisIn() {
         console.log(tempDataCanvasLocal);
         connection.send(data);
     });
-    btnClear.style.display = 'none'
     btnClear.addEventListener("click", function () {
         papanTulisIn.clearCanvas();
         papanTulisIn.sync();
@@ -721,7 +720,7 @@ function persiapanKelas() {
             connection.open(kelas.sessionid, function (isRoomOpened, roomid, error) {
                 if (error) {
                     if (error === connection.errors.ROOM_NOT_AVAILABLE) {
-                        alert('Someone already created this room. Please either join or create a separate room.');
+                        alert('Seseorang telah membuat room dengan id-room yang sama. Silakan join atau buat lagi');
                         return;
                     }
                     alert(error);
@@ -735,24 +734,11 @@ function persiapanKelas() {
             connection.join(kelas.sessionid, function (isRoomJoined, roomid, error) {
                 if (error) {
                     if (error === connection.errors.ROOM_NOT_AVAILABLE) {
-                        alert('This room does not exist. Please either create it or wait for moderator to enter in the room.');
+                        alert('Room ini tidak tersedia. Anda bisa buat atau menunggu fasilitator masuk ruangan');
                         return;
                     }
                     if (error === connection.errors.ROOM_FULL) {
-                        alert('Room is full.');
-                        return;
-                    }
-                    if (error === connection.errors.INVALID_PASSWORD) {
-                        connection.password = prompt('Please enter room password.') || '';
-                        if (!connection.password.length) {
-                            alert('Invalid password.');
-                            return;
-                        }
-                        connection.join(kelas.sessionid, function (isRoomJoined, roomid, error) {
-                            if (error) {
-                                alert(error);
-                            }
-                        });
+                        alert('Room Penuh.');
                         return;
                     }
                     alert(error);
