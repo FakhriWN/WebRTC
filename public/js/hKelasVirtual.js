@@ -101,11 +101,13 @@ $('#btn-generate-link').popover({
 var btnHandsup = document.getElementById('handsup');
 var btnStartClass = document.getElementById('btn-start-class');
 var btnClear = document.getElementById("clear");
+var btnGenerateLink = document.getElementById("btn-generate-link");
 
 if (kelas.open === 'false') {
     btnHandsup.style.display = "inline";
 }else{
     btnStartClass.style.display = "inline";
+    btnGenerateLink.style.display = 'inline';
 }
 btnHandsup.addEventListener('click', function () {
     connection.send({
