@@ -610,9 +610,15 @@ function kirimFile() {
     var file = new FileSelector();
     file.selectSingleFile(function (file) {
         recentFile = file;
-        if (connection.getAllParticipants().length >= 1) {
+        if (connection.getAllParticipants().length >= 1 && recentFile.size <= 25000000) {
             recentFile.userIndex = 0;
             connection.send(file, connection.getAllParticipants()[recentFile.userIndex]);//shareFile
+        } else {
+            console.log("masuk error file");
+            $.notify({
+                // options
+                message: 'Belum ada partisipan yang masuk atau file anda lebih dari 25 MB'
+            });
         }
     });
 }
