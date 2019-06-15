@@ -690,14 +690,38 @@ function kirimPesan() { //diedit
     });
 }
 var recentFile;
+connection.extra.totalUpload = 0;
 document.getElementById('btn-attach-file').onclick = kirimFile;
 function kirimFile() {
     var file = new FileSelector();
     file.selectSingleFile(function (file) {
         recentFile = file;
-        if (connection.getAllParticipants().length >= 1) {
+        var tempTotal = connection.extra.totalUpload;
+        console.log('Total sebelum ditambah = ' + tempTotal);
+        tempTotal += recentFile.size;
+        console.log('Total setelah ditambah = ' + tempTotal);
+        if (connection.getAllParticipants().length < 1) {
+            console.log("masuk error file kurang orang");
+            $.notify({
+                // options
+                message: 'Belum ada partisipan yang masuk'
+            });
+        } else if (tempTotal > 50000000) {
+            console.log("masuk error file limit upload");
+            $.notify({
+                // options
+                message: 'Ukuran file yang anda kirim melebihi sisa kapasitas yang anda miliki'
+            });
+        } else if (recentFile.size > 20000000){
+            console.log("masuk error file limit kirim");
+            $.notify({
+                // options
+                message: 'File yang anda kirim lebih dari 20 MB'
+            });
+        } else {
             recentFile.userIndex = 0;
             connection.send(file, connection.getAllParticipants()[recentFile.userIndex]);//shareFile
+            connection.extra.totalUpload += recentFile.size;
         }
     });
 }
