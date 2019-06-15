@@ -12,9 +12,6 @@ var globalVar = {};
     console.log(params);
     window.params = params;
 })();
-function notifikasi() {
-    console.log('notifikasi');
-}
 
 var connection = new RTCMultiConnection();
 connection.socketURL = '/';
@@ -92,7 +89,6 @@ function initPapanTulisIn() {
     }
 }
 if(kelas.open == 'true'){
-    console.log('memamng owner');
     console.log(connection.userid);
     kelas.idowner = connection.userid;
 }
@@ -109,10 +105,15 @@ var btnClear = document.getElementById("clear");
 var btnGenerateLink = document.getElementById("btn-generate-link");
 var aNamaRuangan = document.getElementById('namaRuangan');
 var btnSaveRekam = document.getElementById('btn-download');
+var btnGetScreen = document.getElementById('getScreen');
+var btnStopRekam = document.getElementById('stopRekam');
+var namaFasilitator;
 
 if (kelas.open === 'false') {
     btnHandsup.style.display = "inline";
+    namaFasilitator = getFullName(kelas.idowner)
 }else{
+    namaFasilitator = kelas.nama;
     btnStartClass.style.display = "inline";
     btnGenerateLink.style.display = 'inline';
     btnSaveRekam.style.display = 'inline';
@@ -125,6 +126,31 @@ btnHandsup.addEventListener('click', function () {
     });
 });
 
+var recorder2 = new RecordRTC_Extension();
+
+btnGetScreen.addEventListener('click', function () {
+    recorder2.startRecording({
+        enableScreen: true,
+        enableMicrophone: true,
+        enableSpeakers: true
+    });
+    btnGetScreen.style.display = 'none';
+    btnStopRekam.style.display = 'inline';
+});
+btnStopRekam.addEventListener('click', function () {
+        recorder2.stopRecording(function (blob) {
+            btnGetScreen.style.display = 'inline';
+            btnStopRekam.style.display = 'none';
+            console.log(blob.size, blob);
+            var d = new Date(connection.extra.waktuMulai);
+            var filename = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + '_' + d.getHours() + '-' + d.getMinutes() + '_' + kelas.namaRuangan + '_' + namaFasilitator;
+            var url = URL.createObjectURL(blob);
+            btnSaveRekam.href = url;
+            btnSaveRekam.style.cursor = 'pointer';
+            btnSaveRekam.download = filename;
+        });
+});
+
 //Fakhri Waliyyuddin Nugraha
 btnStartClass.addEventListener('click',function() {
     connection.extra.waktuMulai = new Date();
@@ -133,12 +159,63 @@ btnStartClass.addEventListener('click',function() {
     run_clock('clockdiv', connection.extra.waktuBerakhir, true);
     connection.extra.timer = true;
     connection.updateExtraData();
-    console.log(connection.extra.timer);
     connection.send({
         type: 'timer',
         waktuMulai : connection.extra.waktuMulai
     });
 });
+function captureScreen(callback) {
+    invokeGetDisplayMedia(function(screen) {
+        addStreamStopListener(screen, function() {
+            if(window.stopCallback) {
+                window.stopCallback();
+            }
+        });
+        callback(screen);
+    }, function(error) {
+        console.error(error);
+        alert('Unable to capture your screen. Please check console logs.\n' + error);
+    });
+}
+function invokeGetDisplayMedia(success, error) {
+    var displaymediastreamconstraints = {
+        video: {
+            displaySurface: 'monitor', // monitor, window, application, browser
+            logicalSurface: true,
+            cursor: 'always' // never, always, motion
+        }
+    };
+    displaymediastreamconstraints = {
+        video: true
+    };
+    if(navigator.mediaDevices.getDisplayMedia) {
+        navigator.mediaDevices.getDisplayMedia(displaymediastreamconstraints).then(success).catch(error);
+    }
+    else {
+        navigator.getDisplayMedia(displaymediastreamconstraints).then(success).catch(error);
+    }
+}
+
+function addStreamStopListener(stream, callback) {
+    stream.addEventListener('ended', function() {
+        callback();
+        callback = function() {};
+    }, false);
+    stream.addEventListener('inactive', function() {
+        callback();
+        callback = function() {};
+    }, false);
+    stream.getTracks().forEach(function(track) {
+        track.addEventListener('ended', function() {
+            callback();
+            callback = function() {};
+        }, false);
+        track.addEventListener('inactive', function() {
+            callback();
+            callback = function() {};
+        }, false);
+    });
+}
 
 //Oleh Fakhri Waliyyuddin Nugraha
 function giveAccesCanvas(Tools, _callback) {
@@ -174,6 +251,20 @@ connection.sdpConstraints.mandatory = {
     OfferToReceiveAudio: true,
     OfferToReceiveVideo: true
 };
+connection.iceServers = [{
+        'urls': [
+            'turn:webrtcweb.com:4455?transport=udp', // restund udp
+        ],
+        'username': 'muazkh',
+        'credential': 'muazkh'
+    },
+    {
+        'urls': [
+            'stun:stun.l.google.com:19302',
+            'stun:stun.l.google.com:19302?transport=udp',
+        ]
+    }
+];
 connection.onUserStatusChanged = function (event) {
     var infoBar = document.getElementById('onUserStatusChanged');
     var names = [];
@@ -192,7 +283,6 @@ connection.onUserStatusChanged = function (event) {
             names.push(connection.extra.userFullName);
         }
     }
-    
     names.forEach(function (item) {
         // console.log(item);
         // console.log(event.extra.idFasilitator);
@@ -202,7 +292,7 @@ connection.onUserStatusChanged = function (event) {
                 html: true,
                 placement: 'top',
                 trigger: 'focus',
-                content: '<button onclick=kickParticipant(' + JSON.stringify(item) + ')>Keluarkan</button>'
+                content: '<button onclick=keluarkanPartisipan(' + JSON.stringify(item) + ')>Keluarkan</button>'
             })
         });
         var btn = document.createElement('button');
@@ -212,7 +302,7 @@ connection.onUserStatusChanged = function (event) {
             btn.setAttribute('data-container', 'body');
             btn.setAttribute('data-toggle', 'popover');
         }
-        // btn.setAttribute('onClick','kickParticipant('+JSON.stringify(event.userid)+')');
+        // btn.setAttribute('onClick','keluarkanPartisipan('+JSON.stringify(event.userid)+')');
         btn.innerHTML = getFullName(item);
         if (kelas.idowner != item) {
             infoBar.appendChild(btn);
@@ -273,7 +363,6 @@ connection.onmessage = function (event) {
         return;
     }
     if (event.data.type == "timer") {
-        console.log(event.data.waktuMulai);
         connection.extra.waktuMulai = new Date();
         connection.extra.waktuBerakhir = connection.extra.waktuMulai;
         connection.extra.waktuBerakhir.setMinutes(connection.extra.waktuMulai.getMinutes() + connection.extra.durasi)
@@ -518,7 +607,6 @@ function appendChatMessage(event, checkmark_id, receiver_id) {
                 checkmark_id: event.data.checkmark_id
             });
         }
-
     } else {
         if (receiver_id != 'All') {
             div.innerHTML = '<b> to ' + getFullName(receiver_id) + ':</b><br>' + event;
@@ -588,10 +676,8 @@ document.getElementById('btn-chat-message').onclick = kirimPesan
 function kirimPesan() { //diedit
     var chatMessage = $('.emojionearea-editor').html();
     $('.emojionearea-editor').html('');
-    //console.log(chatMessage);
     if (!chatMessage || !chatMessage.replace(/ /g, '').length) return;
     var checkmark_id = connection.userid + connection.token();
-    console.log(document.getElementById('set-receiver').value);
     var receiver_id = document.getElementById('set-receiver').value;
     appendChatMessage(chatMessage, checkmark_id, receiver_id);
     connection.send({
@@ -603,7 +689,6 @@ function kirimPesan() { //diedit
         typing: false
     });
 }
-
 var recentFile;
 document.getElementById('btn-attach-file').onclick = kirimFile;
 function kirimFile() {
@@ -730,7 +815,6 @@ function persiapanKelas() {
                 });
             });
         } else {
-
             connection.join(kelas.sessionid, function (isRoomJoined, roomid, error) {
                 if (error) {
                     if (error === connection.errors.ROOM_NOT_AVAILABLE) {
@@ -750,8 +834,21 @@ function persiapanKelas() {
         }
     });
 }
-window.onload = function() {
-  persiapanKelas();
+window.onload = function () {
+    let xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function ($evt) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            let res = JSON.parse(xhr.responseText);
+            console.log("response: ", res);
+            console.log(res.v.iceServers);
+            connection.iceServers.push(res.v.iceServers);
+            persiapanKelas();
+        }
+    }
+    xhr.open("PUT", "https://global.xirsys.net/_turn/MyFirstApp", true);
+    xhr.setRequestHeader("Authorization", "Basic " + btoa("fakhri:ed659d2e-814c-11e9-99a5-0242ac110007"));
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify({ "format": "urls" }));
 };
 
 function addStreamStopListener(stream, callback) {
@@ -867,12 +964,11 @@ $('#btn-share-screen').click(function () {
 });
 
 
-function kickParticipant(id) {
+function keluarkanPartisipan(id) {
     connection.send({
         type : 'kick',
         userid : id
     })
-    //connection.disconnectWith(id);
 }
 function copyLink(_link) {
     const textArea = document.createElement('textarea');

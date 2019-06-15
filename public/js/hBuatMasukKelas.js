@@ -43,7 +43,7 @@ connection.connectSocket(function(socket) {
 //         document.getElementById('btn-submit').disabled = false;
 //     });
 // }
-function getDataForm(){
+function getDataKelas(){
     var sessionId = document.getElementById('session-id');
     var PRI = document.getElementById('PRI');
     if(params.sessionid){
@@ -54,7 +54,7 @@ function getDataForm(){
     }
     PRI.value = connection.publicRoomIdentifier;
 }
-getDataForm();
+getDataKelas();
 function alertBox(message, title, specialMessage, callback) {
     callback = callback || function() {};
     $('.btn-alert-close').unbind('click').bind('click', function(e) {
