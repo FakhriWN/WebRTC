@@ -28,16 +28,16 @@ var papanTulisIn = new CanvasDesigner();
 var recorder;
 var tempDataCanvasLocal = [];
 var tempDataCanvasRemote = [];
-
+function kirimDataPapan(data) {
+    tempDataCanvasLocal.push(data);
+    console.log(tempDataCanvasLocal);
+    connection.send(data);
+}
 function initPapanTulisIn() {
     // you can place widget.html anywhere
     papanTulisIn.widgetHtmlURL = '/canvas-designer/widget.html';
     papanTulisIn.widgetJsURL = '/canvas-designer/widget.js'
-    papanTulisIn.addSyncListener(function (data) { // Yang dapat mensinkronkan coretan canvas
-        tempDataCanvasLocal.push(data);
-        console.log(tempDataCanvasLocal);
-        connection.send(data);
-    });
+    papanTulisIn.addSyncListener(kirimDataPapan);
     btnClear.addEventListener("click", function () {
         papanTulisIn.clearCanvas();
         papanTulisIn.sync();
@@ -842,6 +842,7 @@ function persiapanKelas() {
         }
     });
 }
+// Reqeust Turn Server
 window.onload = function () {
     let xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function ($evt) {
@@ -858,119 +859,6 @@ window.onload = function () {
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.send(JSON.stringify({ "format": "urls" }));
 };
-
-function addStreamStopListener(stream, callback) {
-    stream.addEventListener('ended', function () {
-        callback();
-        callback = function () { };
-    }, false);
-    stream.addEventListener('inactive', function () {
-        callback();
-        callback = function () { };
-    }, false);
-    stream.getTracks().forEach(function (track) {
-        track.addEventListener('ended', function () {
-            callback();
-            callback = function () { };
-        }, false);
-        track.addEventListener('inactive', function () {
-            callback();
-            callback = function () { };
-        }, false);
-    });
-}
-function replaceTrack(videoTrack, screenTrackId) {
-    if (!videoTrack) return;
-    if (videoTrack.readyState === 'ended') {
-        alert('Can not replace an "ended" track. track.readyState: ' + videoTrack.readyState);
-        return;
-    }
-    connection.getAllParticipants().forEach(function (pid) {
-        var peer = connection.peers[pid].peer;
-        if (!peer.getSenders) return;
-        var trackToReplace = videoTrack;
-        peer.getSenders().forEach(function (sender) {
-            if (!sender || !sender.track) return;
-            if (screenTrackId) {
-                if (trackToReplace && sender.track.id === screenTrackId) {
-                    sender.replaceTrack(trackToReplace);
-                    trackToReplace = null;
-                }
-                return;
-            }
-            if (sender.track.id !== tempStream.getTracks()[0].id) return;
-            if (sender.track.kind === 'video' && trackToReplace) {
-                sender.replaceTrack(trackToReplace);
-                trackToReplace = null;
-            }
-        });
-    });
-}
-function replaceScreenTrack(stream) {
-    stream.isScreen = true;
-    stream.streamid = stream.id;
-    stream.type = 'local';
-    // connection.attachStreams.push(stream);
-    connection.onstream({
-        stream: stream,
-        type: 'local',
-        streamid: stream.id,
-        // mediaElement: video
-    });
-    var screenTrackId = stream.getTracks()[0].id;
-    addStreamStopListener(stream, function () {
-        connection.send({
-            hideMainVideo: true
-        });
-        // $('#main-video').hide();
-        $('#screen-viewer').hide();
-        $('#btn-share-screen').show();
-        replaceTrack(tempStream.getTracks()[0], screenTrackId);
-    });
-    stream.getTracks().forEach(function (track) {
-        if (track.kind === 'video' && track.readyState === 'live') {
-            replaceTrack(track);
-        }
-    });
-    connection.send({
-        showMainVideo: true
-    });
-    // $('#main-video').show();
-    $('#screen-viewer').css({
-        top: $('#widget-container').offset().top,
-        left: $('#widget-container').offset().left,
-        width: $('#widget-container').width(),
-        height: $('#widget-container').height()
-    });
-    $('#screen-viewer').show();
-}
-$('#btn-share-screen').click(function () {
-    if (!window.tempStream) {
-        alert('Screen sharing is not enabled.');
-        return;
-    }
-    $('#btn-share-screen').hide();
-    getScreenId(function (error, sourceId, screen_constraints) {
-        if (navigator.userAgent.indexOf('Edge') !== -1 && (!!navigator.msSaveOrOpenBlob || !!navigator.msSaveBlob)) {
-            navigator.getDisplayMedia(screen_constraints).then(stream => {
-                replaceScreenTrack(stream);
-            }, error => {
-                alert('Please make sure to use Edge 17 or higher.');
-            });
-            return;
-        }
-        if (error == 'not-installed') {
-            alert('Please install Chrome extension.');
-            return;
-        }
-        navigator.mediaDevices.getUserMedia(screen_constraints).then(function (stream) {
-            replaceScreenTrack(stream);
-        }).catch(function (error) {
-            alert('Failed to capture your screen. Please check Chrome console logs for further information.');
-        });
-    });
-});
-
 
 function keluarkanPartisipan(id) {
     connection.send({
