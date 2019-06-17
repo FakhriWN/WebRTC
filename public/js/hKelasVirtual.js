@@ -125,31 +125,35 @@ btnHandsup.addEventListener('click', function () {
         type: "atensi"
     });
 });
-
-var recorder2 = new RecordRTC_Extension();
-
-btnGetScreen.addEventListener('click', function () {
-    recorder2.startRecording({
+function MulaiRekam() {
+    if(typeof RecordRTC_Extension === 'undefined') {
+        alert('RecordRTC chrome extension belum aktif atau belum terinstall.');
+        return;
+    }
+    recorder = new RecordRTC_Extension();
+    recorder.startRecording({
         enableScreen: true,
         enableMicrophone: true,
         enableSpeakers: true
     });
     btnGetScreen.style.display = 'none';
     btnStopRekam.style.display = 'inline';
-});
-btnStopRekam.addEventListener('click', function () {
-        recorder2.stopRecording(function (blob) {
-            btnGetScreen.style.display = 'inline';
-            btnStopRekam.style.display = 'none';
-            console.log(blob.size, blob);
-            var d = new Date(connection.extra.waktuMulai);
-            var filename = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + '_' + d.getHours() + '-' + d.getMinutes() + '_' + kelas.namaRuangan + '_' + namaFasilitator;
-            var url = URL.createObjectURL(blob);
-            btnSaveRekam.href = url;
-            btnSaveRekam.style.cursor = 'pointer';
-            btnSaveRekam.download = filename;
-        });
-});
+}
+function StopRekam() {
+    recorder.stopRecording(function (blob) {
+        btnGetScreen.style.display = 'inline';
+        btnStopRekam.style.display = 'none';
+        console.log(blob.size, blob);
+        var d = new Date(connection.extra.waktuMulai);
+        var filename = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + '_' + d.getHours() + '-' + d.getMinutes() + '_' + kelas.namaRuangan + '_' + namaFasilitator;
+        var url = URL.createObjectURL(blob);
+        btnSaveRekam.href = url;
+        btnSaveRekam.style.cursor = 'pointer';
+        btnSaveRekam.download = filename;
+    });
+}
+btnGetScreen.addEventListener('click', MulaiRekam);
+btnStopRekam.addEventListener('click', StopRekam);
 
 //Fakhri Waliyyuddin Nugraha
 btnStartClass.addEventListener('click',function() {
@@ -493,26 +497,6 @@ connection.onstream = function (event) {
             onUnMuted: function (type) {
                 // www.RTCMultiConnection.org/docs/unmute/
                 connection.streamEvents[event.streamid].stream.unmute(type);
-            },
-            onRecordingStarted: function (type) {
-                // www.RTCMultiConnection.org/docs/startRecording/
-                recorder = RecordRTC([recordObject], {
-                    type: 'video'
-                });
-                recorder.startRecording();
-            },
-            onRecordingStopped: function (type) {
-                // www.RTCMultiConnection.org/docs/stopRecording/
-                recorder.stopRecording(function (url, type) {
-                    var d = new Date(connection.extra.waktuMulai);
-                    var filename = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+ d.getDate()+'_'+d.getHours()+'-'+d.getMinutes()+'_'+ kelas.namaRuangan +'_'+ event.extra.nama;
-                    console.log('Recording Stopped');
-                    //invokeSaveAsDialog(recorder.getBlob());
-                    var url = URL.createObjectURL(recorder.getBlob());
-                    btnSaveRekam.href = url;
-                    btnSaveRekam.style.cursor = 'pointer';
-                    btnSaveRekam.download = filename; 
-                });
             },
             showOnMouseEnter: true,
         });
