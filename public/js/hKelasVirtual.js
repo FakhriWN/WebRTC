@@ -286,7 +286,7 @@ connection.onUserStatusChanged = function (event) {
         return;
     } else {
         if (typeof connection.extra.roomOwner == 'undefined'){
-            names.push(connection.extra.userFullName+connection.userid);
+            names.push(connection.extra.userFullName);
         }
     }
     names.forEach(function (item) {
@@ -309,7 +309,7 @@ connection.onUserStatusChanged = function (event) {
                     html: true,
                     placement: 'top',
                     trigger: 'focus',
-                    content: '<button onclick=keluarkanPartisipan(' + JSON.stringify(item) + ')>Keluarkan' + JSON.stringify(item) + '</button>'
+                    content: '<button onclick=keluarkanPartisipan(' + JSON.stringify(item) + ')>Keluarkan</button>'
                 })
             });
         }
