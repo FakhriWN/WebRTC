@@ -272,44 +272,46 @@ connection.iceServers = [{
 connection.onUserStatusChanged = function (event) {
     var infoBar = document.getElementById('onUserStatusChanged');
     var names = [];
-
     infoBar.innerHTML = '';
     connection.getAllParticipants().forEach(function (pid) {
         names.push(pid);
     });
     if (!names.length) {
         names = ['Only You'];
-    } else {
-        console.log(connection.extra.roomOwner);
-        if(typeof connection.extra.roomOwner == 'undefined'){
-            console.log('Bukan Owwwwwner');
-            //names = [connection.extra.userFullName].concat(names);
-            names.push(connection.extra.userFullName);
-        }
-    }
-    names.forEach(function (item) {
-        // console.log(item);
-        // console.log(event.extra.idFasilitator);
-            //M.Ridwan H D P - Fungsi popup
-        $(function () {
-            $('[data-toggle="popover"]').popover({
-                html: true,
-                placement: 'top',
-                trigger: 'focus',
-                content: '<button onclick=keluarkanPartisipan(' + JSON.stringify(item) + ')>Keluarkan</button>'
-            })
-        });
         var btn = document.createElement('button');
         btn.setAttribute('type', 'button');
         btn.setAttribute('class', 'btn btn-secondary btn-partcipant');
-        if(kelas.idowner == connection.userid){
+        btn.innerHTML = names;
+        infoBar.appendChild(btn);
+        return;
+    } else {
+        if (typeof connection.extra.roomOwner == 'undefined'){
+            names.push(connection.extra.userFullName+connection.userid);
+        }
+    }
+    names.forEach(function (item) {
+        var btn = document.createElement('button');
+        btn.id = item;
+        btn.setAttribute('type', 'button');
+        btn.setAttribute('class', 'btn btn-secondary btn-partcipant');
+        if (kelas.idowner == connection.userid) {
             btn.setAttribute('data-container', 'body');
             btn.setAttribute('data-toggle', 'popover');
         }
-        // btn.setAttribute('onClick','keluarkanPartisipan('+JSON.stringify(event.userid)+')');
         btn.innerHTML = getFullName(item);
         if (kelas.idowner != item) {
             infoBar.appendChild(btn);
+        }
+        if(kelas.idowner == connection.userid){
+            //M.Ridwan H D P - Fungsi popup
+            $(function () {
+                $('#' +item+ '').popover({
+                    html: true,
+                    placement: 'top',
+                    trigger: 'focus',
+                    content: '<button onclick=keluarkanPartisipan(' + JSON.stringify(item) + ')>Keluarkan' + JSON.stringify(item) + '</button>'
+                })
+            });
         }
     });
 };
