@@ -609,48 +609,48 @@ function appendChatMessage(event, checkmark_id, receiver_id) {
 }
 var keyPressTimer;
 var numberOfKeys = 0;
-$('#txt-chat-message').emojioneArea({
-    pickerPosition: "top",
-    filtersPosition: "bottom",
-    tones: false,
-    autocomplete: true,
-    inline: true,
-    hidePickerOnBlur: true,
-    events: {
-        focus: function () {
-            $('.emojionearea-category').unbind('click').bind('click', function () {
-                $('.emojionearea-button-close').click();
-            });
-        },
-        keyup: function (e) {
-            var chatMessage = $('.emojionearea-editor').html();
-            if (!chatMessage || !chatMessage.replace(/ /g, '').length) {
-                connection.send({
-                    typing: false
-                });
-            }
-            clearTimeout(keyPressTimer);
-            numberOfKeys++;
-            if (numberOfKeys % 3 === 0) {
-                connection.send({
-                    typing: true
-                });
-            }
-            keyPressTimer = setTimeout(function () {
-                connection.send({
-                    typing: false
-                });
-            }, 1200);
-        },
-        blur: function () {
-            // $('#btn-chat-message').click();
-            connection.send({
-                typing: false
-            });
-        }
-    }
-});
-var list = document.getElementsByClassName('emojionearea-button');
+// $('#txt-chat-message').emojioneArea({
+//     pickerPosition: "top",
+//     filtersPosition: "bottom",
+//     tones: false,
+//     autocomplete: true,
+//     inline: true,
+//     hidePickerOnBlur: true,
+//     events: {
+//         focus: function () {
+//             $('.emojionearea-category').unbind('click').bind('click', function () {
+//                 $('.emojionearea-button-close').click();
+//             });
+//         },
+//         keyup: function (e) {
+//             var chatMessage = $('.emojionearea-editor').html();
+//             if (!chatMessage || !chatMessage.replace(/ /g, '').length) {
+//                 connection.send({
+//                     typing: false
+//                 });
+//             }
+//             clearTimeout(keyPressTimer);
+//             numberOfKeys++;
+//             if (numberOfKeys % 3 === 0) {
+//                 connection.send({
+//                     typing: true
+//                 });
+//             }
+//             keyPressTimer = setTimeout(function () {
+//                 connection.send({
+//                     typing: false
+//                 });
+//             }, 1200);
+//         },
+//         blur: function () {
+//             // $('#btn-chat-message').click();
+//             connection.send({
+//                 typing: false
+//             });
+//         }
+//     }
+// });
+// var list = document.getElementsByClassName('emojionearea-button');
 
 window.onkeyup = function (e) {
     var code = e.keyCode || e.which;
@@ -658,10 +658,14 @@ window.onkeyup = function (e) {
         $('#btn-chat-message').click();
     }
 };
-document.getElementById('btn-chat-message').onclick = kirimPesan
+var btnChatMsg = document.getElementById('btn-chat-message');
+
+btnChatMsg.addEventListener('click',kirimPesan);
 function kirimPesan() { //diedit
-    var chatMessage = $('.emojionearea-editor').html();
-    $('.emojionearea-editor').html('');
+    //var chatMessage = $('#txt-chat-message').html();
+    var chatMessage = document.getElementById('txt-chat-message').value;
+    console.log(chatMessage);
+    document.getElementById('txt-chat-message').value = '';
     if (!chatMessage || !chatMessage.replace(/ /g, '').length) return;
     var checkmark_id = connection.userid + connection.token();
     var receiver_id = document.getElementById('set-receiver').value;
