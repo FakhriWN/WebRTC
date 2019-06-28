@@ -244,7 +244,7 @@ function SyncLocalRemoteCanvas() {
     });
 }
 // here goes RTCMultiConnection
-connection.chunkSize = 16000;
+connection.chunkSize = 15000;
 connection.enableFileSharing = true;
 connection.session = {
     audio: true,
@@ -485,7 +485,7 @@ connection.onstream = function (event) {
         var medHeight = 250;
         isTimerStart(event);//Untuk mendapatkan waktu
         if (connection.isInitiator) {
-            button = ['mute-audio', 'volume-slider', 'record-video'];
+            button = ['mute-audio', 'volume-slider'];
         } else {
             button = ['volume-slider'];
         }
@@ -609,48 +609,6 @@ function appendChatMessage(event, checkmark_id, receiver_id) {
 }
 var keyPressTimer;
 var numberOfKeys = 0;
-// $('#txt-chat-message').emojioneArea({
-//     pickerPosition: "top",
-//     filtersPosition: "bottom",
-//     tones: false,
-//     autocomplete: true,
-//     inline: true,
-//     hidePickerOnBlur: true,
-//     events: {
-//         focus: function () {
-//             $('.emojionearea-category').unbind('click').bind('click', function () {
-//                 $('.emojionearea-button-close').click();
-//             });
-//         },
-//         keyup: function (e) {
-//             var chatMessage = $('.emojionearea-editor').html();
-//             if (!chatMessage || !chatMessage.replace(/ /g, '').length) {
-//                 connection.send({
-//                     typing: false
-//                 });
-//             }
-//             clearTimeout(keyPressTimer);
-//             numberOfKeys++;
-//             if (numberOfKeys % 3 === 0) {
-//                 connection.send({
-//                     typing: true
-//                 });
-//             }
-//             keyPressTimer = setTimeout(function () {
-//                 connection.send({
-//                     typing: false
-//                 });
-//             }, 1200);
-//         },
-//         blur: function () {
-//             // $('#btn-chat-message').click();
-//             connection.send({
-//                 typing: false
-//             });
-//         }
-//     }
-// });
-// var list = document.getElementsByClassName('emojionearea-button');
 
 window.onkeyup = function (e) {
     var code = e.keyCode || e.which;
