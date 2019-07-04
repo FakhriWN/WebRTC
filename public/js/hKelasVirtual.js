@@ -390,7 +390,6 @@ connection.onmessage = function (event) {
             connection.attachStreams.forEach(function (localStream) {
                 localStream.stop();
             });
-
             connection.closeSocket();
         }
     }
