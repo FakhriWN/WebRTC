@@ -1,5 +1,6 @@
 // this object is used to get uniquie rooms based on this demo
 // i.e. only those rooms that are created on this page
+
 function getURLParameter() {
     var params = {},
         r = /([^&=]+)=?([^&]*)/g;

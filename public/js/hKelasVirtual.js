@@ -1,4 +1,11 @@
 var globalVar = {};
+var ipkick = [];
+var connection = new RTCMultiConnection();
+var papanTulisIn = new CanvasDesigner();
+var recorder;
+var tempDataCanvasLocal = [];
+var tempDataCanvasRemote = [];
+
 function getURLParameter() {
     var params = {},
         r = /([^&=]+)=?([^&]*)/g;
@@ -13,14 +20,50 @@ function getURLParameter() {
     window.params = params;
 }
 getURLParameter();
-var connection = new RTCMultiConnection();
+//GetIpAddress
+// Reqeust Turn Server
+function getTurnServer(){
+    persiapanKelas();
+    // let xhr = new XMLHttpRequest();
+    // xhr.onreadystatechange = function ($evt) {
+    //     if (xhr.readyState == 4 && xhr.status == 200) {
+    //         let res = JSON.parse(xhr.responseText);
+    //         console.log("response: ", res);
+    //         console.log(res.v.iceServers);
+    //         connection.iceServers.push(res.v.iceServers);
+    //         persiapanKelas();
+    //     }
+    // }
+    // //Akun fakhri
+    // xhr.open("PUT", "https://global.xirsys.net/_turn/MyFirstApp", true);
+    // xhr.setRequestHeader("Authorization", "Basic " + btoa("fakhri:ed659d2e-814c-11e9-99a5-0242ac110007"));
+    // xhr.setRequestHeader("Content-Type", "application/json");
+    // xhr.send(JSON.stringify({ "format": "urls" }));
+    // Akun polban
+    // xhr.open("PUT", "https://global.xirsys.net/_turn/MyFirstApp", true);
+    // xhr.setRequestHeader("Authorization", "Basic " + btoa("nelf:45312bb2-a07a-11e9-a802-0242ac110007"));
+    // xhr.setRequestHeader("Content-Type": "application/json");
+    // xhr.send(JSON.stringify({ "format": "urls" }));
+}
+function getIpAddress(){
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url : 'https://ipapi.co/json/',
+        //data: request, <--- this is for POST type
+        success: function(res){
+            console.log(res.ip);
+            connection.extra.ip = res.ip;
+            getTurnServer();
+            //persiapanKelas();
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+            alert('Gagal mendapatkan ipaddress');
+        }
+    });
+}
 
 // set value 2 for one-to-one connection
-var papanTulisIn = new CanvasDesigner();
-var recorder;
-var tempDataCanvasLocal = [];
-var tempDataCanvasRemote = [];
-
 function kirimDataPapan(data) {
     tempDataCanvasLocal.push(data);
     console.log(tempDataCanvasLocal);
@@ -277,6 +320,7 @@ connection.onUserStatusChanged = function (event) {
     }
     names.forEach(function (item) {
         var btn = document.createElement('button');
+        var extra = connection.getExtraData(item);
         btn.id = item;
         btn.setAttribute('type', 'button');
         btn.setAttribute('class', 'btn btn-secondary btn-partcipant');
@@ -295,7 +339,7 @@ connection.onUserStatusChanged = function (event) {
                     html: true,
                     placement: 'top',
                     trigger: 'focus',
-                    content: '<button onclick=keluarkanPartisipan(' + JSON.stringify(item) + ')>Keluarkan</button>'
+                    content: '<button onclick=keluarkanPartisipan('+JSON.stringify(item)+','+JSON.stringify(extra.ip)+')>Keluarkan'+extra.ip+'</button>'
                 })
             });
         }
@@ -362,6 +406,7 @@ connection.onmessage = function (event) {
         return;
     }
     if(event.data.type == 'kick'){
+        ipkick.push(event.data.ipkick);
         if(event.data.userid == connection.userid){
                 $.notify({
                 // options
@@ -450,6 +495,14 @@ var isdeklarasi = false;
 connection.onstream = function (event) {
     // console.log('onstream');
     // console.log(event);
+    ipkick.forEach(function(ipkicked){
+        console.log(ipkicked);
+        console.log(event.extra);
+        if(event.extra.ip == ipkicked){
+            connection.disconnectWith(event.userid);
+            return;
+        }
+    });
     var div = document.createElement('div');
     var otherVideos = document.querySelector('#other-videos');
     var mainVideo = document.getElementById('main-video');
@@ -478,6 +531,8 @@ connection.onstream = function (event) {
             width: medWidth, //Pixel
             height: medHeight,
             buttons: button,
+            volume: 50,
+            //title: 'nice',
             onMuted: function (type) {
                 connection.streamEvents[event.streamid].stream.mute(type);
             },
@@ -797,35 +852,18 @@ function persiapanKelas() {
         }
     });
 }
-// Reqeust Turn Server
-window.onload = function () {
-    persiapanKelas();
-    // let xhr = new XMLHttpRequest();
-    // xhr.onreadystatechange = function ($evt) {
-    //     if (xhr.readyState == 4 && xhr.status == 200) {
-    //         let res = JSON.parse(xhr.responseText);
-    //         console.log("response: ", res);
-    //         console.log(res.v.iceServers);
-    //         connection.iceServers.push(res.v.iceServers);
-    //         persiapanKelas();
-    //     }
-    // }
-    // Akun fakhri
-    // xhr.open("PUT", "https://global.xirsys.net/_turn/MyFirstApp", true);
-    // xhr.setRequestHeader("Authorization", "Basic " + btoa("fakhri:ed659d2e-814c-11e9-99a5-0242ac110007"));
-    // xhr.setRequestHeader("Content-Type", "application/json");
-    // xhr.send(JSON.stringify({ "format": "urls" }));
-    // Akun polban
-    // xhr.open("PUT", "https://global.xirsys.net/_turn/MyFirstApp", true);
-    // xhr.setRequestHeader("Authorization", "Basic " + btoa("nelf:45312bb2-a07a-11e9-a802-0242ac110007"));
-    // xhr.setRequestHeader("Content-Type": "application/json");
-    // xhr.send(JSON.stringify({ "format": "urls" }));
-};
 
-function keluarkanPartisipan(id) {
+
+function keluarkanPartisipan(id,ipkicked) {
+    ipkick.push(ipkicked);
+    ipkick.forEach(function(item){
+        console.log('kick');
+        console.log(item);
+    })
     connection.send({
         type : 'kick',
-        userid : id
+        userid : id,
+        ipkick : ipkicked
     })
 }
 function copyLink(_link) {
@@ -836,3 +874,7 @@ function copyLink(_link) {
     document.execCommand('copy');
     document.body.removeChild(textArea);
 }
+
+window.onload = function () {
+    getIpAddress();
+};

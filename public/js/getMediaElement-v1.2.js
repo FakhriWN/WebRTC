@@ -364,15 +364,16 @@ document.write('<link rel="stylesheet" href="https://www.WebRTC-Experiment.com/g
             slider.type = 'range';
             slider.min = 0;
             slider.max = 100;
+            console.log(options.volume);
             slider.value = typeof options.volume != 'undefined' ? options.volume : 100;
             slider.onchange = function() {
                 options.mediaElement.volume = '.' + slider.value.toString().substr(0, 1);
+                console.log(options.mediaElement.volume);
             };
             volumeSlider.appendChild(slider);
         }
-
         // setting default volume
-        options.mediaElement.volume = typeof options.volume != 'undefined' ? options.volume : 1;
+        options.mediaElement.volume = typeof options.volume != 'undefined' ? (options.volume/100) : 1;
 
         // if user want to include zoomin/zoomout buttons
         if (buttons.has('full-screen')) {
