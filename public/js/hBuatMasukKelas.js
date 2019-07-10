@@ -1,18 +1,18 @@
 // this object is used to get uniquie rooms based on this demo
 // i.e. only those rooms that are created on this page
-(function() {
+function getURLParameter() {
     var params = {},
         r = /([^&=]+)=?([^&]*)/g;
     function d(s) {
         return decodeURIComponent(s.replace(/\+/g, ' '));
     }
     var match, search = window.location.search;
-    while (match = r.exec(search.substring(1))){
+    while (match = r.exec(search.substring(1))) {
         params[d(match[1])] = d(match[2]);
     }
     console.log(params);
     window.params = params;
-})();
+}
 
 var connection = new RTCMultiConnection();
 connection.socketURL ='/';
@@ -44,6 +44,7 @@ connection.connectSocket(function(socket) {
 //     });
 // }
 function getDataKelas(){
+    getURLParameter();
     var sessionId = document.getElementById('session-id');
     var PRI = document.getElementById('PRI');
     if(params.sessionid){

@@ -372,3 +372,7 @@ input[disabled], button[disabled] {
     color: white;
 		display: inline-block;
 	}
+#onUserStatusChanged {
+  height: 100px;
+  overflow: scroll;
+}

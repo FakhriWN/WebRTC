@@ -1,5 +1,5 @@
 var globalVar = {};
-(function () {
+function getURLParameter() {
     var params = {},
         r = /([^&=]+)=?([^&]*)/g;
     function d(s) {
@@ -11,23 +11,16 @@ var globalVar = {};
     }
     console.log(params);
     window.params = params;
-})();
-
+}
+getURLParameter();
 var connection = new RTCMultiConnection();
-connection.socketURL = '/';
-connection.extra.userFullName = kelas.nama; //<%=data.person%> 
-/// make this room public
-connection.publicRoomIdentifier = kelas.PRI;
-connection.socketMessageEvent = 'canvas-dashboard';
-// keep room opened even if owner leaves
-connection.autoCloseEntireSession = true;
-// https://www.rtcmulticonnection.org/docs/maxParticipantsAllowed/
-connection.maxParticipantsAllowed = parseInt(kelas.maxPartisipan)+1;
+
 // set value 2 for one-to-one connection
 var papanTulisIn = new CanvasDesigner();
 var recorder;
 var tempDataCanvasLocal = [];
 var tempDataCanvasRemote = [];
+
 function kirimDataPapan(data) {
     tempDataCanvasLocal.push(data);
     console.log(tempDataCanvasLocal);
@@ -89,15 +82,8 @@ function initPapanTulisIn() {
     }
 }
 if(kelas.open == 'true'){
-    console.log(connection.userid);
     kelas.idowner = connection.userid;
 }
-var link = location.origin + '/kelas/bergabung?sessionid=' + kelas.sessionid+'&idowner='+connection.userid;
-$('#btn-generate-link').popover({
-    html: true,
-    placement: 'top',
-    content: '<a id="a-link" href=' + link + ' value=' + link + '>' + link + '</a><br><button class="btn btn-secondary btn-sm" onclick=copyLink(' + JSON.stringify(link) + ')>Copy</button>'
-});
 // var btnSync = document.getElementById('sync');
 var btnHandsup = document.getElementById('handsup');
 var btnStartClass = document.getElementById('btn-start-class');
@@ -746,7 +732,21 @@ function updateLabel(progress, label) {
     var position = +progress.position.toFixed(2).split('.')[1] || 100;
     label.innerHTML = position + '%';
 }
+function generateLink(){
+    var link = location.origin + '/kelas/bergabung?sessionid=' + kelas.sessionid + '&idowner=' + connection.userid;
+    $('#btn-generate-link').popover({
+        html: true,
+        placement: 'top',
+        content: '<a id="a-link" href=' + link + ' value=' + link + '>' + link + '</a><br><button class="btn btn-secondary btn-sm" onclick=copyLink(' + JSON.stringify(link) + ')>Copy</button>'
+    });
+}
 function persiapanKelas() {
+    connection.socketURL = '/';
+    connection.extra.userFullName = kelas.nama; //<%=data.person%> 
+    connection.publicRoomIdentifier = kelas.PRI;/// make this room public
+    connection.socketMessageEvent = 'canvas-dashboard';
+    connection.autoCloseEntireSession = true;// keep room opened even if owner leaves
+    connection.maxParticipantsAllowed = parseInt(kelas.maxPartisipan) + 1;// https://www.rtcmulticonnection.org/docs/maxParticipantsAllowed/
     initPapanTulisIn();
     var wc = document.getElementById('widget-container');
     papanTulisIn.appendTo(document.getElementById('widget-container'), function () {
@@ -754,6 +754,7 @@ function persiapanKelas() {
         if (kelas.open === true || kelas.open === 'true') {
             console.log('Append Canvas');
             //Fakhri Waliyyuddin Nugraha
+            generateLink();
             connection.extra.nama = kelas.nama;
             connection.extra.namaRuangan = kelas.namaRuangan;
             connection.extra.waktuMulai = new Date();
@@ -798,20 +799,27 @@ function persiapanKelas() {
 }
 // Reqeust Turn Server
 window.onload = function () {
-    let xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function ($evt) {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            let res = JSON.parse(xhr.responseText);
-            console.log("response: ", res);
-            console.log(res.v.iceServers);
-            connection.iceServers.push(res.v.iceServers);
-            persiapanKelas();
-        }
-    }
-    xhr.open("PUT", "https://global.xirsys.net/_turn/MyFirstApp", true);
-    xhr.setRequestHeader("Authorization", "Basic " + btoa("fakhri:ed659d2e-814c-11e9-99a5-0242ac110007"));
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(JSON.stringify({ "format": "urls" }));
+    persiapanKelas();
+    // let xhr = new XMLHttpRequest();
+    // xhr.onreadystatechange = function ($evt) {
+    //     if (xhr.readyState == 4 && xhr.status == 200) {
+    //         let res = JSON.parse(xhr.responseText);
+    //         console.log("response: ", res);
+    //         console.log(res.v.iceServers);
+    //         connection.iceServers.push(res.v.iceServers);
+    //         persiapanKelas();
+    //     }
+    // }
+    // Akun fakhri
+    // xhr.open("PUT", "https://global.xirsys.net/_turn/MyFirstApp", true);
+    // xhr.setRequestHeader("Authorization", "Basic " + btoa("fakhri:ed659d2e-814c-11e9-99a5-0242ac110007"));
+    // xhr.setRequestHeader("Content-Type", "application/json");
+    // xhr.send(JSON.stringify({ "format": "urls" }));
+    // Akun polban
+    // xhr.open("PUT", "https://global.xirsys.net/_turn/MyFirstApp", true);
+    // xhr.setRequestHeader("Authorization", "Basic " + btoa("nelf:45312bb2-a07a-11e9-a802-0242ac110007"));
+    // xhr.setRequestHeader("Content-Type": "application/json");
+    // xhr.send(JSON.stringify({ "format": "urls" }));
 };
 
 function keluarkanPartisipan(id) {
