@@ -856,10 +856,6 @@ function persiapanKelas() {
 
 function keluarkanPartisipan(id,ipkicked) {
     ipkick.push(ipkicked);
-    ipkick.forEach(function(item){
-        console.log('kick');
-        console.log(item);
-    })
     connection.send({
         type : 'kick',
         userid : id,
