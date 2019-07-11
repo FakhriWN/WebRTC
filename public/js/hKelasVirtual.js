@@ -453,10 +453,15 @@ connection.onmessage = function (event) {
         return;
     }
     if(event.data.id == connection.userid){
-        console.log(event.data.newName);
         if(event.data.type == 'namaBaru'){
             connection.extra.userFullName = event.data.newName;
+            connection.updateExtraData();
             connection.onUserStatusChanged(event);
+        }else if(event.data.type == 'Telah_Keluar'){
+            $.notify({
+                // options
+                message: 'Anda tidak dapat masuk kembali ke kelas ini, karena sudah dikeluarkan oleh fasilitator'
+            });
         }
     }
     papanTulisIn.syncData(event.data);
@@ -502,38 +507,40 @@ var isdeklarasi = false;
 // extra code
 function cekNama(event) {
     var number = 0;
-    var newName;
-    var listNama = [];
+    var newName = event.extra.userFullName;
+    var listUser = [];
     connection.getAllParticipants().forEach(function (pid) {
-        listNama.push(getFullName(pid));
+        //listNama.push(getFullName(pid));
+        listUser.push({
+            userid: pid,
+            username: getFullName(pid)
+        })
     });
-    listNama.sort();
-    listNama.reverse();
-    console.log(listNama);
-    console.log('Yang baru join');
-    listNama.forEach(function (nama) {
-        console.log('Iterasi');
-        console.log(nama);
-        console.log(event.extra.userFullName);
-        if (event.extra.userFullName == nama) {
-            var name = event.extra.userFullName;
-            number = parseInt(name);
-            console.log(number);
-            if (isNaN(number)) {
-                newName = 1 + connection.extra.userFullName
-            } else {
-                number = number + 1;
-                newName = number + connection.extra.userFullName;
+    listUser.sort(function(a,b){return a.username - b.username});
+    if (listUser.length > 1) {
+        listUser.forEach(function (user) {
+            console.log(user.username);
+            console.log(event.extra.userFullName);
+            if (event.extra.userFullName == user.username && event.userid != user.userid) {
+                console.log('Masuk Logika IF');
+                var name = event.extra.userFullName;
+                number = parseInt(name);
+                if (isNaN(number)) {
+                    newName = 1 + name
+                } else {
+                    name = name.substring(number.toString().length, name.length);
+                    number = number + 1;
+                    newName = number + name;
+                }
+                event.extra.userFullName = newName;
+                connection.send({
+                    id: event.userid,
+                    type: 'namaBaru',
+                    newName: newName
+                });
             }
-            event.extra.userFullName = newName;
-        }
-    });
-    console.log(newName);
-    connection.send({
-        id : event.userid,
-        type: 'namaBaru',
-        newName: newName
-    });
+        });
+    }
     return event.extra.userFullName;
 }
 // connection.onNewParticipant = function(participantId, userPreferences) {
@@ -542,20 +549,27 @@ function cekNama(event) {
 //         connection.acceptParticipationRequest(participantId, userPreferences);
 //     }
 // };
-connection.onstream = function (event) {
-    console.log('onstream');
-    // console.log(event);
-    if(connection.isInitiator){
-        event.extra.userFullName = cekNama(event);
-    }
+function cekIP(event){
     ipkick.forEach(function(ipkicked){
         console.log(ipkicked);
         console.log(event.extra);
         if(event.extra.ip == ipkicked){
+            connection.send({
+                id: event.userid,
+                type: 'Telah_Keluar'
+            });
             connection.disconnectWith(event.userid);
             return;
         }
     });
+}
+connection.onstream = function (event) {
+    console.log('onstream');
+    // console.log(event);
+    cekIP(event);
+    if(connection.isInitiator){
+        event.extra.userFullName = cekNama(event);
+    }
     var div = document.createElement('div');
     var otherVideos = document.querySelector('#other-videos');
     var mainVideo = document.getElementById('main-video');
