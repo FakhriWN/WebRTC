@@ -108,8 +108,8 @@ document.write('<link rel="stylesheet" href="https://www.WebRTC-Experiment.com/g
 
         function setFonts() {
             context.font = 'Normal 20px Arial';
-            context.fillStyle = 'red';
-            context.strokeStyle = 'red';
+            context.fillStyle = '#b30000';
+            context.strokeStyle = '#b30000';
             context.lineWidth = 2;
             context.lineCap = 'round';
             context.lineJoin = 'round';
@@ -364,11 +364,9 @@ document.write('<link rel="stylesheet" href="https://www.WebRTC-Experiment.com/g
             slider.type = 'range';
             slider.min = 0;
             slider.max = 100;
-            console.log(options.volume);
             slider.value = typeof options.volume != 'undefined' ? options.volume : 100;
             slider.onchange = function() {
                 options.mediaElement.volume = '.' + slider.value.toString().substr(0, 1);
-                console.log(options.mediaElement.volume);
             };
             volumeSlider.appendChild(slider);
         }

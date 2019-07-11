@@ -6,6 +6,7 @@ var recorder;
 var tempDataCanvasLocal = [];
 var tempDataCanvasRemote = [];
 
+
 function getURLParameter() {
     var params = {},
         r = /([^&=]+)=?([^&]*)/g;
@@ -451,6 +452,13 @@ connection.onmessage = function (event) {
         streamByUserId.unmute(event.data.type);
         return;
     }
+    if(event.data.id == connection.userid){
+        console.log(event.data.newName);
+        if(event.data.type == 'namaBaru'){
+            connection.extra.userFullName = event.data.newName;
+            connection.onUserStatusChanged(event);
+        }
+    }
     papanTulisIn.syncData(event.data);
     tempDataCanvasRemote.push(event.data);
 };
@@ -492,9 +500,54 @@ function isTimerStart(event) {
 
 var isdeklarasi = false;
 // extra code
+function cekNama(event) {
+    var number = 0;
+    var newName;
+    var listNama = [];
+    connection.getAllParticipants().forEach(function (pid) {
+        listNama.push(getFullName(pid));
+    });
+    listNama.sort();
+    listNama.reverse();
+    console.log(listNama);
+    console.log('Yang baru join');
+    listNama.forEach(function (nama) {
+        console.log('Iterasi');
+        console.log(nama);
+        console.log(event.extra.userFullName);
+        if (event.extra.userFullName == nama) {
+            var name = event.extra.userFullName;
+            number = parseInt(name);
+            console.log(number);
+            if (isNaN(number)) {
+                newName = 1 + connection.extra.userFullName
+            } else {
+                number = number + 1;
+                newName = number + connection.extra.userFullName;
+            }
+            event.extra.userFullName = newName;
+        }
+    });
+    console.log(newName);
+    connection.send({
+        id : event.userid,
+        type: 'namaBaru',
+        newName: newName
+    });
+    return event.extra.userFullName;
+}
+// connection.onNewParticipant = function(participantId, userPreferences) {
+//     var message = participantId + ' is trying to join your room. Confirm to accept his request.';
+//     if( window.confirm(message ) ) {
+//         connection.acceptParticipationRequest(participantId, userPreferences);
+//     }
+// };
 connection.onstream = function (event) {
-    // console.log('onstream');
+    console.log('onstream');
     // console.log(event);
+    if(connection.isInitiator){
+        event.extra.userFullName = cekNama(event);
+    }
     ipkick.forEach(function(ipkicked){
         console.log(ipkicked);
         console.log(event.extra);
@@ -532,7 +585,7 @@ connection.onstream = function (event) {
             height: medHeight,
             buttons: button,
             volume: 50,
-            //title: 'nice',
+            title: event.extra.userFullName,
             onMuted: function (type) {
                 connection.streamEvents[event.streamid].stream.mute(type);
             },
@@ -550,6 +603,7 @@ connection.onstream = function (event) {
         $('#main-video').show();
     } else {
         console.log('Not Owner');
+        var namaPartisipan;
         var medWidth = ($('#other-videos').width() * (50 / 100));
         var medHeight = 120;
 
@@ -558,6 +612,7 @@ connection.onstream = function (event) {
         }
         if (connection.isInitiator) {
             button = ['mute-audio', 'volume-slider'];
+            namaPartisipan = event.extra.userFullName;
         } else {
             button = ['volume-slider'];
         }
@@ -566,6 +621,7 @@ connection.onstream = function (event) {
             height: medHeight,
             buttons: button,
             toggle: event.type == 'local' ? ['mute-audio'] : [],
+            title:  namaPartisipan,
             onMuted: function (type) {
                 // www.RTCMultiConnection.org/docs/mute/
                 if (event.type == 'remote') {
@@ -591,6 +647,9 @@ connection.onstream = function (event) {
             },
             showOnMouseEnter: true,
         });
+        var streamByUserId = connection.streamEvents.selectFirst({ userid: event.userid }).stream;
+        streamByUserId.mute('audio');
+
         div.appendChild(mediaElement);
         otherVideos.appendChild(div);
 
