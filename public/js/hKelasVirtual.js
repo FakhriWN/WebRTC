@@ -695,7 +695,7 @@ function appendChatMessage(event, checkmark_id, receiver_id) {
     if (event.data) {
         if (event.data.receiver_id == connection.userid) {
             div.innerHTML = '<b> from ' + (event.extra.userFullName || event.userid) + ':</b><br>' + event.data.chatMessage;
-            div.style.background = '#f73838';
+            div.style.background = '#4298f5';
         }
         else {
             div.innerHTML = '<b>' + (event.extra.userFullName || event.userid) + ':</b><br>' + event.data.chatMessage;
@@ -709,7 +709,7 @@ function appendChatMessage(event, checkmark_id, receiver_id) {
     } else {
         if (receiver_id != 'All') {
             div.innerHTML = '<b> to ' + getFullName(receiver_id) + ':</b><br>' + event;
-            div.style.background = '#f73838';
+            div.style.background = '#4298f5';
         }
         else {
             div.innerHTML = '<b>You:</b>' + event;
